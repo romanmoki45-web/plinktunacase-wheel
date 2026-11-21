@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>PlinktunaCase — Колесо фортуны</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root {
+--bg: #0b0f17;
+--card: #141b29;
+--card-border: #243049;
+--text: #f3f6fc;
+--muted: #8fa0bf;
+--accent: #38bdf8;
+--accent-2: #a855f7;
+--success: #22c55e;
+--danger: #ef4444;
+}
+
+* {
+box-sizing: border-box;
+-webkit-tap-highlight-color: transparent;
+}
+
+body {
+margin: 0;
+min-height: 100vh;
+background: radial-gradient(circle at top, #172238 0%, var(--bg) 65%);
+color: var(--text);
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+display: flex;
+justify-content: center;
+padding: 16px;
+}
+
+.app {
+width: 100%;
+max-width: 420px;
+display: flex;
+flex-direction: column;
+gap: 14px;
+}
+
+.header {
+background: var(--card);
+border: 1px solid var(--card-border);
+border-radius: 18px;
+padding: 14px 16px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.brand-title {
+font-weight: 800;
+font-size: 17px;
+letter-spacing: 0.3px;
+}
+
+.brand-sub {
+font-size: 12px;
+color: var(--muted);
+margin-top: 2px;
+}
+
+.badge {
+background: rgba(56, 189, 248, 0.14);
+color: var(--accent);
+border: 1px solid rgba(56, 189, 248, 0.35);
+padding: 6px 10px;
+border-radius: 12px;
+font-size: 12px;
+font-weight: 700;
+}
+
+.stats {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 10px;
+}
+
+.stat-box {
+background: var(--card);
+border: 1px solid var(--card-border);
+border-radius: 16px;
+padding: 12px 10px;
+text-align: center;
+}
+
+.stat-label {
+font-size: 11px;
+color: var(--muted);
+text-transform: uppercase;
+letter-spacing: 0.4px;
+}
+
+.stat-value {
+font-size: 20px;
+font-weight: 800;
+margin-top: 4px;
+}
+
+.wheel-card {
+background: var(--card);
+border: 1px solid var(--card-border);
+border-radius: 22px;
+padding: 20px 14px;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 14px;
+}
+
+.wheel-wrap {
+position: relative;
+width: 280px;
+height: 280px;
+display: flex;
+justify-content: center;
+align-items: center;
+}
+
+.pointer {
+position: absolute;
+top: -10px;
+left: 50%;
+transform: translateX(-50%);
+z-index: 5;
+width: 0;
+height: 0;
+border-left: 14px solid transparent;
+border-right: 14px solid transparent;
+border-top: 26px solid #facc15;
+filter: drop-shadow(0 4px 10px rgba(250, 204, 21, 0.45));
+}
+
+canvas {
+width: 100%;
+height: 100%;
+border-radius: 50%;
+box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45), 0 0 0 4px #1e293b;
+}
+
+.status {
+min-height: 44px;
+width: 100%;
+background: #0e1420;
+border: 1px solid var(--card-border);
+border-radius: 14px;
+padding: 10px 12px;
+display: flex;
+align-items: center;
+justify-content: center;
+text-align: center;
+font-size: 14px;
+font-weight: 600;
+}
+
+.actions {
+display: flex;
+flex-direction: column;
+gap: 10px;
+}
+
+.btn-spin {
+width: 100%;
+padding: 15px;
+border: none;
+border-radius: 16px;
+background: linear-gradient(135deg, var(--accent), var(--accent-2));
+color: #ffffff;
+font-size: 16px;
+font-weight: 800;
+cursor: pointer;
+box-shadow: 0 8px 22px rgba(56, 189, 248, 0.25);
+transition: transform 0.12s ease, opacity 0.2s ease;
+}
+
+.btn-spin:active {
+transform: scale(0.98);
+}
+
+.btn-spin:disabled {
+opacity: 0.45;
+cursor: not-allowed;
+}
+
+.btn-refill {
+width: 100%;
+padding: 12px;
+border-radius: 14px;
+border: 1px solid var(--card-border);
+background: transparent;
+color: var(--muted);
+font-size: 13px;
+font-weight: 600;
+cursor: pointer;
+}
+
+.btn-refill:active {
+background: rgba(255, 255, 255, 0.04);
+}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="header">
+<div>
+<div class="brand-title">PlinktunaCase</div>
+<div class="brand-sub">Колесо фортуны • Прототип</div>
+</div>
+<div class="badge">DEMO</div>
+</div>
+
+<div class="stats">
+<div class="stat-box">
+<div class="stat-label">Очки</div>
+<div class="stat-value" id="scoreVal">0</div>
+</div>
+<div class="stat-box">
+<div class="stat-label">Попытки</div>
+<div class="stat-value" id="spinsVal">5</div>
+</div>
+<div class="stat-box">
+<div class="stat-label">Серия</div>
+<div class="stat-value" id="streakVal">0</div>
+</div>
+</div>
+
+<div class="wheel-card">
+<div class="wheel-wrap">
+<div class="pointer"></div>
+<canvas id="wheel" width="560" height="560"></canvas>
+</div>
+
+<div class="status" id="statusText">Нажми «Крутить колесо», чтобы проверить прототип</div>
+
+<div class="actions">
+<button class="btn-spin" id="spinBtn">КРУТИТЬ КОЛЕСО</button>
+<button class="btn-refill" id="refillBtn">Восстановить 5 попыток (тест)</button>
+</div>
+</div>
+</div>
+
+<script>
+const tg = window.Telegram && window.Telegram.WebApp;
+if (tg) {
+tg.ready();
+tg.expand();
+}
+
+const sectors = [
+{ label: "+50", type: "points", value: 50, color: "#1d4ed8" },
+{ label: "0", type: "empty", value: 0, color: "#334155" },
+{ label: "+100", type: "points", value: 100, color: "#0ea5e9" },
+{ label: "+1 СПИН", type: "spin", value: 1, color: "#7c3aed" },
+{ label: "+25", type: "points", value: 25, color: "#2563eb" },
+{ label: "x2 СЕРИЯ", type: "bonus", value: 75, color: "#059669" },
+{ label: "+150", type: "points", value: 150, color: "#9333ea" },
+{ label: "+10", type: "points", value: 10, color: "#475569" }
+ ];
+
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+const scoreEl = document.getElementById("scoreVal");
+const spinsEl = document.getElementById("spinsVal");
+const streakEl = document.getElementById("streakVal");
+const statusEl = document.getElementById("statusText");
+const spinBtn = document.getElementById("spinBtn");
+const refillBtn = document.getElementById("refillBtn");
+
+let score = 0;
+let spins = 5;
+let streak = 0;
+let currentAngle = 0;
+let isSpinning = false;
+
+const arc = (Math.PI * 2) / sectors.length;
+
+function drawWheel() {
+const cx = canvas.width / 2;
+const cy = canvas.height / 2;
+const r = canvas.width / 2 - 8;
+
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+sectors.forEach((sector, i) => {
+const startAngle = currentAngle + i * arc;
+const endAngle = startAngle + arc;
+
+ctx.beginPath();
+ctx.moveTo(cx, cy);
+ctx.arc(cx, cy, r, startAngle, endAngle);
+ctx.closePath();
+ctx.fillStyle = sector.color;
+ctx.fill();
+
+ctx.lineWidth = 3;
+ctx.strokeStyle = "#0b0f17";
+ctx.stroke();
+
+ctx.save();
+ctx.translate(cx, cy);
+ctx.rotate(startAngle + arc / 2);
+ctx.textAlign = "right";
+ctx.fillStyle = "#ffffff";
+ctx.font = "bold 26px sans-serif";
+ctx.fillText(sector.label, r - 24, 9);
+ctx.restore();
+});
+
+ctx.beginPath();
+ctx.arc(cx, cy, 34, 0, Math.PI * 2);
+ctx.fillStyle = "#0f172a";
+ctx.fill();
+ctx.lineWidth = 4;
+ctx.strokeStyle = "#facc15";
+ctx.stroke();
+}
+
+function updateUI() {
+scoreEl.textContent = score;
+spinsEl.textContent = spins;
+streakEl.textContent = streak;
+spinBtn.disabled = isSpinning || spins <= 0;
+}
+
+function spinWheel() {
+if (isSpinning || spins <= 0) return;
+
+isSpinning = true;
+spins -= 1;
+updateUI();
+statusEl.textContent = "Колесо крутится...";
+
+const extraTurns = 5 + Math.floor(Math.random() * 4);
+const randomOffset = Math.random() * Math.PI * 2;
+const targetAngle = currentAngle + extraTurns * Math.PI * 2 + randomOffset;
+const duration = 3200;
+const startTime = performance.now();
+const startAngle = currentAngle;
+
+function animate(now) {
+const elapsed = now - startTime;
+const progress = Math.min(elapsed / duration, 1);
+const easeOut = 1 - Math.pow(1 - progress, 3);
+
+currentAngle = startAngle + (targetAngle - startAngle) * easeOut;
+drawWheel();
+
+if (progress < 1) {
+requestAnimationFrame(animate);
+} else {
+currentAngle = targetAngle % (Math.PI * 2);
+finishSpin();
+}
+}
+
+requestAnimationFrame(animate);
+}
+
+function finishSpin() {
+// Указатель находится сверху (-Math.PI / 2)
+const pointerAngle = (Math.PI * 1.5 - currentAngle + Math.PI * 4) % (Math.PI * 2);
+const index = Math.floor(pointerAngle / arc) % sectors.length;
+const hit = sectors[index];
+
+if (hit.type === "points") {
+score += hit.value;
+streak += 1;
+statusEl.textContent = Выпало ${hit.label} очков! Серия: ${streak};
+} else if (hit.type === "spin") {
+spins += hit.value;
+streak += 1;
+statusEl.textContent = Бонус! +${hit.value} бесплатная попытка; } else if (hit.type === "bonus") { const gained = hit.value + streak * 10; score += gained; streak += 1; statusEl.textContent =Комбо! Начислено +${gained} очков;
+} else {
+streak = 0;
+statusEl.textContent = Пустой сектор — серия сброшена. Попробуй ещё!;
+}
+
+isSpinning = false;
+updateUI();
+}
+
+spinBtn.addEventListener("click", spinWheel);
+
+refillBtn.addEventListener("click", () => {
+if (isSpinning) return;
+spins = 5;
+statusEl.textContent = "Попытки восстановлены до 5";
+updateUI();
+});
+
+drawWheel();
+updateUI();
+</script>
+</body>
+</html>
+
+
+
+
+
