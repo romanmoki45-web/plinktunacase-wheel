@@ -1,404 +1,1089 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>PlinktunaCase — Колесо фортуны</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<style>
-:root {
---bg: #0b0f17;
---card: #141b29;
---card-border: #243049;
---text: #f3f6fc;
---muted: #8fa0bf;
---accent: #38bdf8;
---accent-2: #a855f7;
---success: #22c55e;
---danger: #ef4444;
-}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>PlinktunaCase</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #0e1117;
+      --card: #161b26;
+      --card-light: #1f2636;
+      --text: #f3f6fc;
+      --muted: #8b95a5;
+      --accent: #3b82f6;
+      --gold: #fbbf24;
+    }
 
-* {
-box-sizing: border-box;
--webkit-tap-highlight-color: transparent;
-}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-body {
-margin: 0;
-min-height: 100vh;
-background: radial-gradient(circle at top, #172238 0%, var(--bg) 65%);
-color: var(--text);
-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-display: flex;
-justify-content: center;
-padding: 16px;
-}
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 12px 12px 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-.app {
-width: 100%;
-max-width: 420px;
-display: flex;
-flex-direction: column;
-gap: 14px;
-}
+    .container {
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
 
-.header {
-background: var(--card);
-border: 1px solid var(--card-border);
-border-radius: 18px;
-padding: 14px 16px;
-display: flex;
-justify-content: space-between;
-align-items: center;
-}
+    /* Профиль и баланс */
+    .header-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
 
-.brand-title {
-font-weight: 800;
-font-size: 17px;
-letter-spacing: 0.3px;
-}
+    .profile-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
 
-.brand-sub {
-font-size: 12px;
-color: var(--muted);
-margin-top: 2px;
-}
+    .avatar-wrap {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      background: #232a3b;
+      position: relative;
+      flex-shrink: 0;
+      transition: all 0.25s ease;
+    }
 
-.badge {
-background: rgba(56, 189, 248, 0.14);
-color: var(--accent);
-border: 1px solid rgba(56, 189, 248, 0.35);
-padding: 6px 10px;
-border-radius: 12px;
-font-size: 12px;
-font-weight: 700;
-}
+    /* Редкость: от простых редких к красивым легендарным */
+    .rarity-common {
+      border: 2px solid #64748b;
+    }
+    .rarity-rare {
+      border: 2px solid #3b82f6;
+      background: #172554;
+    }
+    .rarity-superrare {
+      border: 3px solid #10b981;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.35);
+      background: #064e3b;
+    }
+    .rarity-epic {
+      border: 3px solid #a855f7;
+      box-shadow: 0 0 14px rgba(168, 85, 247, 0.7);
+      background: linear-gradient(135deg, #3b0764, #1e1b4b);
+    }
+    .rarity-mythic {
+      border: 3px solid #ef4444;
+      box-shadow: 0 0 18px rgba(239, 68, 68, 0.85);
+      background: linear-gradient(135deg, #7f1d1d, #450a0a);
+      animation: pulseMythic 1.8s infinite;
+    }
+    .rarity-legendary {
+      border: 3px solid transparent;
+      background:
+        linear-gradient(135deg, #422006, #78350f) padding-box,
+        linear-gradient(45deg, #fde047, #f59e0b, #fffbeb, #eab308) border-box;
+      box-shadow: 0 0 22px rgba(251, 191, 36, 0.95), inset 0 0 10px rgba(253, 224, 71, 0.45);
+      animation: glowLeg 2.2s infinite alternate;
+    }
 
-.stats {
-display: grid;
-grid-template-columns: repeat(3, 1fr);
-gap: 10px;
-}
+    @keyframes pulseMythic {
+      0%, 100% { box-shadow: 0 0 12px rgba(239, 68, 68, 0.7); }
+      50% { box-shadow: 0 0 22px rgba(239, 68, 68, 1); }
+    }
 
-.stat-box {
-background: var(--card);
-border: 1px solid var(--card-border);
-border-radius: 16px;
-padding: 12px 10px;
-text-align: center;
-}
+    @keyframes glowLeg {
+      0% { box-shadow: 0 0 16px rgba(251, 191, 36, 0.8); transform: scale(1); }
+      100% { box-shadow: 0 0 28px rgba(253, 224, 71, 1); transform: scale(1.04); }
+    }
 
-.stat-label {
-font-size: 11px;
-color: var(--muted);
-text-transform: uppercase;
-letter-spacing: 0.4px;
-}
+    .user-meta {
+      overflow: hidden;
+    }
+    .user-meta h3 {
+      font-size: 15px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .user-meta span {
+      font-size: 12px;
+      color: var(--muted);
+    }
 
-.stat-value {
-font-size: 20px;
-font-weight: 800;
-margin-top: 4px;
-}
+    .stats-pill {
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .stats-pill .coins {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--gold);
+    }
+    .stats-pill .spins {
+      font-size: 12px;
+      color: #60a5fa;
+      font-weight: 600;
+    }
 
-.wheel-card {
-background: var(--card);
-border: 1px solid var(--card-border);
-border-radius: 22px;
-padding: 20px 14px;
-display: flex;
-flex-direction: column;
-align-items: center;
-gap: 14px;
-}
+    /* Шкала Топа */
+    .top-bar-card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 10px 14px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .top-bar-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 6px;
+      color: var(--muted);
+    }
+    .top-bar-header strong {
+      color: var(--text);
+    }
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      background: #232a3b;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 15%;
+      background: linear-gradient(90deg, #3b82f6, #fbbf24);
+      border-radius: 99px;
+      transition: width 0.35s ease;
+    }
 
-.wheel-wrap {
-position: relative;
-width: 280px;
-height: 280px;
-display: flex;
-justify-content: center;
-align-items: center;
-}
+    /* Навигация: 3 игры + Профиль */
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      background: var(--card);
+      padding: 5px;
+      border-radius: 14px;
+    }
+    .tab-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      padding: 8px 3px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+    }
 
-.pointer {
-position: absolute;
-top: -10px;
-left: 50%;
-transform: translateX(-50%);
-z-index: 5;
-width: 0;
-height: 0;
-border-left: 14px solid transparent;
-border-right: 14px solid transparent;
-border-top: 26px solid #facc15;
-filter: drop-shadow(0 4px 10px rgba(250, 204, 21, 0.45));
-}
+    .page-section {
+      display: none;
+      width: 100%;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .page-section.active {
+      display: flex;
+    }
 
-canvas {
-width: 100%;
-height: 100%;
-border-radius: 50%;
-box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45), 0 0 0 4px #1e293b;
-}
+    /* Игровая зона */
+    .game-card {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .game-sub {
+      display: none;
+      width: 100%;
+      flex-direction: column;
+      align-items: center;
+    }
+    .game-sub.active {
+      display: flex;
+    }
 
-.status {
-min-height: 44px;
-width: 100%;
-background: #0e1420;
-border: 1px solid var(--card-border);
-border-radius: 14px;
-padding: 10px 12px;
-display: flex;
-align-items: center;
-justify-content: center;
-text-align: center;
-font-size: 14px;
-font-weight: 600;
-}
+    .wheel-wrap {
+      position: relative;
+      width: 250px;
+      height: 250px;
+      margin: 8px 0 14px;
+    }
+    .pointer {
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-top: 22px solid #ef4444;
+      z-index: 5;
+    }
+    canvas {
+      border-radius: 12px;
+      display: block;
+    }
+    #wheelCanvas {
+      border-radius: 50%;
+    }
 
-.actions {
-display: flex;
-flex-direction: column;
-gap: 10px;
-}
+    .action-btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
 
-.btn-spin {
-width: 100%;
-padding: 15px;
-border: none;
-border-radius: 16px;
-background: linear-gradient(135deg, var(--accent), var(--accent-2));
-color: #ffffff;
-font-size: 16px;
-font-weight: 800;
-cursor: pointer;
-box-shadow: 0 8px 22px rgba(56, 189, 248, 0.25);
-transition: transform 0.12s ease, opacity 0.2s ease;
-}
+    .coin-visual {
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #fde047, #d97706);
+      border: 4px solid #fef08a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 42px;
+      margin: 16px 0;
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+    }
+    .coin-flip {
+      animation: flipCoin 0.7s ease-in-out;
+    }
+    @keyframes flipCoin {
+      0% { transform: rotateY(0deg) scale(1); }
+      50% { transform: rotateY(540deg) scale(1.15); }
+      100% { transform: rotateY(1080deg) scale(1); }
+    }
+    .coin-choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+    }
 
-.btn-spin:active {
-transform: scale(0.98);
-}
+    .result-msg {
+      margin-top: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      min-height: 20px;
+      color: #93c5fd;
+    }
 
-.btn-spin:disabled {
-opacity: 0.45;
-cursor: not-allowed;
-}
+    /* Карточки секций */
+    .section-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .section-title {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-.btn-refill {
-width: 100%;
-padding: 12px;
-border-radius: 14px;
-border: 1px solid var(--card-border);
-background: transparent;
-color: var(--muted);
-font-size: 13px;
-font-weight: 600;
-cursor: pointer;
-}
+    /* Редактор имени во вкладке Профиль */
+    .name-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .name-input {
+      flex: 1;
+      background: var(--card-light);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 9px 12px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+    .name-input:focus {
+      border-color: var(--accent);
+    }
+    .small-btn {
+      border: none;
+      border-radius: 10px;
+      padding: 0 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff;
+    }
+    .small-btn.secondary {
+      background: var(--card-light);
+      color: var(--muted);
+    }
 
-.btn-refill:active {
-background: rgba(255, 255, 255, 0.04);
-}
-</style>
+    /* Сетка аватарок за звёзды */
+    .stars-shop-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .star-item {
+      background: var(--card-light);
+      border-radius: 14px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border: 1px solid transparent;
+    }
+    .star-item.equipped {
+      border-color: #60a5fa;
+      background: rgba(59, 130, 246, 0.12);
+    }
+    .star-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .star-info h4 {
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .star-info p {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .star-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+    .stars-buy-btn {
+      border: none;
+      border-radius: 9px;
+      padding: 6px 11px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      background: linear-gradient(135deg, #f59e0b, #eab308);
+      color: #111827;
+    }
+    .equip-btn {
+      border: none;
+      border-radius: 9px;
+      padding: 6px 11px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #2563eb;
+      color: #fff;
+    }
+    .equip-btn.active-eq {
+      background: #1e293b;
+      color: #93c5fd;
+    }
+    .demo-unlock-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 10px;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* Таблица лидеров */
+    .top-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--card-light);
+      padding: 8px 10px;
+      border-radius: 12px;
+    }
+    .top-row.me {
+      border: 1px solid #3b82f6;
+    }
+    .top-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .rank-num {
+      font-weight: 800;
+      width: 20px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .rank-1 { color: #fbbf24; }
+    .rank-2 { color: #cbd5e1; }
+    .rank-3 { color: #d97706; }
+
+    .mini-av {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      background: #232a3b;
+      flex-shrink: 0;
+    }
+
+    .hint-note {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+      margin-top: 8px;
+      background: rgba(255,255,255,0.03);
+      padding: 8px 10px;
+      border-radius: 10px;
+    }
+  </style>
 </head>
 <body>
-<div class="app">
-<div class="header">
-<div>
-<div class="brand-title">PlinktunaCase</div>
-<div class="brand-sub">Колесо фортуны • Прототип</div>
-</div>
-<div class="badge">DEMO</div>
-</div>
+  <div class="container">
+    <!-- Шапка профиля -->
+    <div class="header-card">
+      <div class="profile-box">
+        <div id="myAvatar" class="avatar-wrap rarity-common">🐟</div>
+        <div class="user-meta">
+          <h3 id="playerName">Игрок</h3>
+          <span id="myRarityLabel">Базовый профиль</span>
+        </div>
+      </div>
+      <div class="stats-pill">
+        <div class="coins"><span id="scoreVal">200</span> 💰</div>
+        <div class="spins">Спины: <span id="spinsVal">5</span> ⚡</div>
+      </div>
+    </div>
 
-<div class="stats">
-<div class="stat-box">
-<div class="stat-label">Очки</div>
-<div class="stat-value" id="scoreVal">0</div>
-</div>
-<div class="stat-box">
-<div class="stat-label">Попытки</div>
-<div class="stat-value" id="spinsVal">5</div>
-</div>
-<div class="stat-box">
-<div class="stat-label">Серия</div>
-<div class="stat-value" id="streakVal">0</div>
-</div>
-</div>
+    <!-- Шкала до Топ-1 -->
+    <div class="top-bar-card">
+      <div class="top-bar-header">
+        <span>Твоё место: <strong id="myRankText">#4</strong></span>
+        <span>До Топ-1: <strong id="toTopText">1300 💰</strong></span>
+      </div>
+      <div class="progress-track">
+        <div id="topProgressFill" class="progress-fill"></div>
+      </div>
+    </div>
 
-<div class="wheel-card">
-<div class="wheel-wrap">
-<div class="pointer"></div>
-<canvas id="wheel" width="560" height="560"></canvas>
-</div>
+    <!-- Вкладки: 3 игры + Профиль -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTopTab('games', 'wheel', this)">🎡 Фортуна</button>
+      <button class="tab-btn" onclick="switchTopTab('games', 'plinko', this)">🔵 Плинко</button>
+      <button class="tab-btn" onclick="switchTopTab('games', 'coin', this)">🪙 Монета</button>
+      <button class="tab-btn" onclick="switchTopTab('profile', null, this)">👤 Профиль</button>
+    </div>
 
-<div class="status" id="statusText">Нажми «Крутить колесо», чтобы проверить прототип</div>
+    <!-- РАЗДЕЛ ИГР -->
+    <div id="section-games" class="page-section active">
+      <div class="game-card">
+        <!-- 1. КОЛЕСО ФОРТУНЫ -->
+        <div id="game-wheel" class="game-sub active">
+          <div class="wheel-wrap">
+            <div class="pointer"></div>
+            <canvas id="wheelCanvas" width="250" height="250"></canvas>
+          </div>
+          <button id="spinBtn" class="action-btn" onclick="spinWheel()">КРУТИТЬ КОЛЕСО (1 ⚡)</button>
+          <div id="wheelResult" class="result-msg">Испытай удачу!</div>
+        </div>
 
-<div class="actions">
-<button class="btn-spin" id="spinBtn">КРУТИТЬ КОЛЕСО</button>
-<button class="btn-refill" id="refillBtn">Восстановить 5 попыток (тест)</button>
-</div>
-</div>
-</div>
+        <!-- 2. ПЛИНКО -->
+        <div id="game-plinko" class="game-sub">
+          <canvas id="plinkoCanvas" width="320" height="260"></canvas>
+          <button id="plinkoBtn" class="action-btn" onclick="dropPlinko()">БРОСИТЬ ШАРИК (50 💰)</button>
+          <div id="plinkoResult" class="result-msg">Попади в крайние лунки x5!</div>
+        </div>
 
-<script>
-const tg = window.Telegram && window.Telegram.WebApp;
-if (tg) {
-tg.ready();
-tg.expand();
-}
+        <!-- 3. ОРЁЛ И РЕШКА -->
+        <div id="game-coin" class="game-sub">
+          <p style="font-size:13px; color:var(--muted);">Ставка: 50 💰 • Выигрыш: 100 💰</p>
+          <div id="coinVisual" class="coin-visual">🦅</div>
+          <div class="coin-choices">
+            <button class="action-btn" onclick="flipCoin('heads')">🦅 ОРЁЛ</button>
+            <button class="action-btn" onclick="flipCoin('tails')">🪙 РЕШКА</button>
+          </div>
+          <div id="coinResult" class="result-msg">Выбери сторону монеты</div>
+        </div>
+      </div>
 
-const sectors = [
-{ label: "+50", type: "points", value: 50, color: "#1d4ed8" },
-{ label: "0", type: "empty", value: 0, color: "#334155" },
-{ label: "+100", type: "points", value: 100, color: "#0ea5e9" },
-{ label: "+1 СПИН", type: "spin", value: 1, color: "#7c3aed" },
-{ label: "+25", type: "points", value: 25, color: "#2563eb" },
-{ label: "x2 СЕРИЯ", type: "bonus", value: 75, color: "#059669" },
-{ label: "+150", type: "points", value: 150, color: "#9333ea" },
-{ label: "+10", type: "points", value: 10, color: "#475569" }
- ];
+      <!-- Таблица лидеров -->
+      <div class="section-card">
+        <div class="section-title">
+          <span>🏆 Топ игроков</span>
+          <span style="font-size:11px; color:var(--muted);">Рейтинг по монетам</span>
+        </div>
+        <div id="topList" class="top-list"></div>
+      </div>
+    </div>
 
-const canvas = document.getElementById("wheel");
-const ctx = canvas.getContext("2d");
-const scoreEl = document.getElementById("scoreVal");
-const spinsEl = document.getElementById("spinsVal");
-const streakEl = document.getElementById("streakVal");
-const statusEl = document.getElementById("statusText");
-const spinBtn = document.getElementById("spinBtn");
-const refillBtn = document.getElementById("refillBtn");
+    <!-- ОТДЕЛЬНАЯ ВКЛАДКА ПРОФИЛЯ -->
+    <div id="section-profile" class="page-section">
+      <!-- Изменение имени -->
+      <div class="section-card">
+        <div class="section-title">
+          <span>✏️ Имя в игре</span>
+        </div>
+        <p style="font-size:12px; color:var(--muted);">Имя отображается в профиле и таблице топа.</p>
+        <div class="name-row">
+          <input id="nameInput" class="name-input" type="text" maxlength="20" placeholder="Введи новое имя..." />
+          <button class="small-btn" onclick="saveCustomName()">Сохранить</button>
+          <button class="small-btn secondary" onclick="resetTelegramName()">TG</button>
+        </div>
+        <div id="nameStatus" class="result-msg" style="text-align:left; font-size:12px;"></div>
+      </div>
 
-let score = 0;
-let spins = 5;
-let streak = 0;
-let currentAngle = 0;
-let isSpinning = false;
+      <!-- Покупка аватарок и обводок за Звёзды -->
+      <div class="section-card">
+        <div class="section-title">
+          <span>⭐ Аватарки и обводки за Звёзды</span>
+          <span style="font-size:11px; color:var(--gold);">10★ – 50★</span>
+        </div>
+        <div id="starsShopList" class="stars-shop-list"></div>
+        <div class="hint-note">
+          Для реального списания Telegram Stars нужен обработчик оплаты на стороне бота (`@plinktunacase_bot`). Кнопка <b>«Тест-выдача»</b> позволяет сразу примерить любой уровень на GitHub Pages.
+        </div>
+      </div>
+    </div>
+  </div>
 
-const arc = (Math.PI * 2) / sectors.length;
+  <script>
+    const STORAGE_KEY = "plinktunacase_save_v1";
 
-function drawWheel() {
-const cx = canvas.width / 2;
-const cy = canvas.height / 2;
-const r = canvas.width / 2 - 8;
+    const tg = window.Telegram && window.Telegram.WebApp;
+    let tgDefaultName = "Игрок";
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.first_name) {
+        tgDefaultName = tg.initDataUnsafe.user.first_name;
+      }
+    }
 
-ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Каталог аватарок: простые редкие -> яркие легендарные
+    const AVATARS = [
+      { id: "common", name: "Новичок", icon: "🐟", rarityClass: "rarity-common", stars: 0, desc: "Простой базовый контур", label: "Базовый" },
+      { id: "rare", name: "Редкая", icon: "🐬", rarityClass: "rarity-rare", stars: 10, desc: "Простая синяя рамка", label: "Редкая • 10★" },
+      { id: "superrare", name: "Сверхредкая", icon: "🦈", rarityClass: "rarity-superrare", stars: 20, desc: "Аккуратное зелёное свечение", label: "Сверхредкая • 20★" },
+      { id: "epic", name: "Эпик", icon: "🐙", rarityClass: "rarity-epic", stars: 30, desc: "Фиолетовая неоновая рамка", label: "Эпик • 30★" },
+      { id: "mythic", name: "Мифик", icon: "🐉", rarityClass: "rarity-mythic", stars: 40, desc: "Пульсирующее красное свечение", label: "Мифик • 40★" },
+      { id: "legendary", name: "Легендарная", icon: "👑", rarityClass: "rarity-legendary", stars: 50, desc: "Золотая переливающаяся корона-рамка", label: "Легендарная • 50★" }
+    ];
 
-sectors.forEach((sector, i) => {
-const startAngle = currentAngle + i * arc;
-const endAngle = startAngle + arc;
+    const RIVALS = [
+      { name: "CryptoShark", score: 1500, icon: "👑", rarityClass: "rarity-legendary" },
+      { name: "LuckyMax", score: 950, icon: "🐉", rarityClass: "rarity-mythic" },
+      { name: "Neptune", score: 500, icon: "🐙", rarityClass: "rarity-epic" },
+      { name: "AquaKid", score: 120, icon: "🐬", rarityClass: "rarity-rare" }
+    ];
 
-ctx.beginPath();
-ctx.moveTo(cx, cy);
-ctx.arc(cx, cy, r, startAngle, endAngle);
-ctx.closePath();
-ctx.fillStyle = sector.color;
-ctx.fill();
+    // Загрузка сохранения
+    function loadState() {
+      const fallback = {
+        score: 200,
+        spins: 5,
+        customName: tgDefaultName,
+        equippedId: "common",
+        unlocked: ["common"]
+      };
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return fallback;
+        const parsed = JSON.parse(raw);
+        return {
+          score: typeof parsed.score === "number" ? parsed.score : 200,
+          spins: typeof parsed.spins === "number" ? parsed.spins : 5,
+          customName: typeof parsed.customName === "string" && parsed.customName.trim() ? parsed.customName : tgDefaultName,
+          equippedId: AVATARS.some(a => a.id === parsed.equippedId) ? parsed.equippedId : "common",
+          unlocked: Array.isArray(parsed.unlocked) && parsed.unlocked.length ? [...new Set(["common", ...parsed.unlocked])] : ["common"]
+        };
+      } catch (e) {
+        return fallback;
+      }
+    }
 
-ctx.lineWidth = 3;
-ctx.strokeStyle = "#0b0f17";
-ctx.stroke();
+    const state = loadState();
 
-ctx.save();
-ctx.translate(cx, cy);
-ctx.rotate(startAngle + arc / 2);
-ctx.textAlign = "right";
-ctx.fillStyle = "#ffffff";
-ctx.font = "bold 26px sans-serif";
-ctx.fillText(sector.label, r - 24, 9);
-ctx.restore();
-});
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {}
+    }
 
-ctx.beginPath();
-ctx.arc(cx, cy, 34, 0, Math.PI * 2);
-ctx.fillStyle = "#0f172a";
-ctx.fill();
-ctx.lineWidth = 4;
-ctx.strokeStyle = "#facc15";
-ctx.stroke();
-}
+    function updateUI() {
+      saveState();
+      document.getElementById("scoreVal").textContent = state.score;
+      document.getElementById("spinsVal").textContent = state.spins;
+      document.getElementById("playerName").textContent = state.customName;
 
-function updateUI() {
-scoreEl.textContent = score;
-spinsEl.textContent = spins;
-streakEl.textContent = streak;
-spinBtn.disabled = isSpinning || spins <= 0;
-}
+      const inputEl = document.getElementById("nameInput");
+      if (inputEl && document.activeElement !== inputEl) {
+        inputEl.value = state.customName;
+      }
 
-function spinWheel() {
-if (isSpinning || spins <= 0) return;
+      const curAv = AVATARS.find(a => a.id === state.equippedId) || AVATARS[0];
+      const myAvEl = document.getElementById("myAvatar");
+      myAvEl.className = `avatar-wrap ${curAv.rarityClass}`;
+      myAvEl.textContent = curAv.icon;
+      document.getElementById("myRarityLabel").textContent = curAv.label;
 
-isSpinning = true;
-spins -= 1;
-updateUI();
-statusEl.textContent = "Колесо крутится...";
+      renderStarsShop();
+      renderLeaderboard();
+    }
 
-const extraTurns = 5 + Math.floor(Math.random() * 4);
-const randomOffset = Math.random() * Math.PI * 2;
-const targetAngle = currentAngle + extraTurns * Math.PI * 2 + randomOffset;
-const duration = 3200;
-const startTime = performance.now();
-const startAngle = currentAngle;
+    function switchTopTab(sectionName, gameName, btn) {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
 
-function animate(now) {
-const elapsed = now - startTime;
-const progress = Math.min(elapsed / duration, 1);
-const easeOut = 1 - Math.pow(1 - progress, 3);
+      document.getElementById("section-games").classList.toggle("active", sectionName === "games");
+      document.getElementById("section-profile").classList.toggle("active", sectionName === "profile");
 
-currentAngle = startAngle + (targetAngle - startAngle) * easeOut;
-drawWheel();
+      if (sectionName === "games" && gameName) {
+        document.querySelectorAll(".game-sub").forEach(s => s.classList.remove("active"));
+        document.getElementById(`game-${gameName}`).classList.add("active");
+        if (gameName === "plinko") drawPlinkoBoard();
+      }
+    }
 
-if (progress < 1) {
-requestAnimationFrame(animate);
-} else {
-currentAngle = targetAngle % (Math.PI * 2);
-finishSpin();
-}
-}
+    function saveCustomName() {
+      const val = document.getElementById("nameInput").value.trim();
+      if (!val) {
+        document.getElementById("nameStatus").textContent = "Имя не может быть пустым.";
+        return;
+      }
+      state.customName = val;
+      updateUI();
+      document.getElementById("nameStatus").textContent = "Имя сохранено!";
+    }
 
-requestAnimationFrame(animate);
-}
+    function resetTelegramName() {
+      state.customName = tgDefaultName;
+      document.getElementById("nameInput").value = tgDefaultName;
+      updateUI();
+      document.getElementById("nameStatus").textContent = `Восстановлено имя: ${tgDefaultName}`;
+    }
 
-function finishSpin() {
-// Указатель находится сверху (-Math.PI / 2)
-const pointerAngle = (Math.PI * 1.5 - currentAngle + Math.PI * 4) % (Math.PI * 2);
-const index = Math.floor(pointerAngle / arc) % sectors.length;
-const hit = sectors[index];
+    function requestStarPurchase(av) {
+      // Готовый вызов для бота (если подключён обработчик оплаты звёздами)
+      if (tg && typeof tg.sendData === "function") {
+        try {
+          tg.sendData(JSON.stringify({
+            action: "buy_avatar_stars",
+            avatarId: av.id,
+            stars: av.stars
+          }));
+        } catch (e) {}
+      }
+      alert(
+        `Лот: "${av.name}" (${av.stars} ⭐)\n` +
+        `Для списания реальных звёзд нужен сервер/бот, принимающий оплату Telegram Stars. ` +
+        `Для проверки вида аватарок нажми «Тест-выдача».`
+      );
+    }
 
-if (hit.type === "points") {
-score += hit.value;
-streak += 1;
-statusEl.textContent = Выпало ${hit.label} очков! Серия: ${streak};
-} else if (hit.type === "spin") {
-spins += hit.value;
-streak += 1;
-statusEl.textContent = Бонус! +${hit.value} бесплатная попытка; } else if (hit.type === "bonus") { const gained = hit.value + streak * 10; score += gained; streak += 1; statusEl.textContent =Комбо! Начислено +${gained} очков;
-} else {
-streak = 0;
-statusEl.textContent = Пустой сектор — серия сброшена. Попробуй ещё!;
-}
+    function demoUnlockAvatar(id) {
+      if (!state.unlocked.includes(id)) {
+        state.unlocked.push(id);
+      }
+      state.equippedId = id;
+      updateUI();
+    }
 
-isSpinning = false;
-updateUI();
-}
+    function renderStarsShop() {
+      const list = document.getElementById("starsShopList");
+      list.innerHTML = "";
 
-spinBtn.addEventListener("click", spinWheel);
+      AVATARS.forEach(av => {
+        const isUnlocked = state.unlocked.includes(av.id);
+        const isEquipped = state.equippedId === av.id;
 
-refillBtn.addEventListener("click", () => {
-if (isSpinning) return;
-spins = 5;
-statusEl.textContent = "Попытки восстановлены до 5";
-updateUI();
-});
+        const row = document.createElement("div");
+        row.className = `star-item ${isEquipped ? "equipped" : ""}`;
 
-drawWheel();
-updateUI();
-</script>
+        let rightHtml = "";
+        if (isEquipped) {
+          rightHtml = `<button class="equip-btn active-eq">Надето</button>`;
+        } else if (isUnlocked) {
+          rightHtml = `<button class="equip-btn" onclick="equipUnlocked('${av.id}')">Надеть</button>`;
+        } else {
+          rightHtml = `
+            <button class="stars-buy-btn" onclick="requestStarPurchaseById('${av.id}')">Купить ${av.stars} ⭐</button>
+            <button class="demo-unlock-btn" onclick="demoUnlockAvatar('${av.id}')">Тест-выдача</button>
+          `;
+        }
+
+        row.innerHTML = `
+          <div class="star-left">
+            <div class="avatar-wrap ${av.rarityClass}" style="width:44px;height:44px;font-size:20px;">${av.icon}</div>
+            <div class="star-info">
+              <h4>${av.name}</h4>
+              <p>${av.desc}</p>
+            </div>
+          </div>
+          <div class="star-actions">${rightHtml}</div>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    window.equipUnlocked = function(id) {
+      state.equippedId = id;
+      updateUI();
+    };
+
+    window.requestStarPurchaseById = function(id) {
+      const av = AVATARS.find(a => a.id === id);
+      if (av) requestStarPurchase(av);
+    };
+
+    function renderLeaderboard() {
+      const curAv = AVATARS.find(a => a.id === state.equippedId) || AVATARS[0];
+      const allPlayers = [
+        ...RIVALS,
+        { name: `${state.customName} (Ты)`, score: state.score, icon: curAv.icon, rarityClass: curAv.rarityClass, isMe: true }
+      ].sort((a, b) => b.score - a.score);
+
+      const myIndex = allPlayers.findIndex(p => p.isMe);
+      const topScore = allPlayers[0].score;
+      const diff = Math.max(0, topScore - state.score);
+
+      document.getElementById("myRankText").textContent = `#${myIndex + 1}`;
+      document.getElementById("toTopText").textContent = diff === 0 ? "Ты Топ-1! 🏆" : `${diff} 💰`;
+
+      const pct = topScore > 0 ? Math.min(100, Math.round((state.score / topScore) * 100)) : 100;
+      document.getElementById("topProgressFill").style.width = `${pct}%`;
+
+      const list = document.getElementById("topList");
+      list.innerHTML = "";
+      allPlayers.forEach((p, idx) => {
+        const rankClass = idx === 0 ? "rank-1" : idx === 1 ? "rank-2" : idx === 2 ? "rank-3" : "";
+        const row = document.createElement("div");
+        row.className = `top-row ${p.isMe ? "me" : ""}`;
+        row.innerHTML = `
+          <div class="top-left">
+            <span class="rank-num ${rankClass}">#${idx + 1}</span>
+            <div class="mini-av ${p.rarityClass}">${p.icon}</div>
+            <span style="font-size:13px;font-weight:700;">${p.name}</span>
+          </div>
+          <strong style="font-size:13px;color:var(--gold);">${p.score} 💰</strong>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    /* ================= 1. КОЛЕСО ФОРТУНЫ ================= */
+    const wheelCanvas = document.getElementById("wheelCanvas");
+    const wCtx = wheelCanvas.getContext("2d");
+    const sectors = [
+      { label: "+100 💰", color: "#2563eb", type: "coins", val: 100 },
+      { label: "Пусто", color: "#334155", type: "none", val: 0 },
+      { label: "+250 💰", color: "#059669", type: "coins", val: 250 },
+      { label: "+2 ⚡", color: "#7c3aed", type: "spins", val: 2 },
+      { label: "+500 💰", color: "#d97706", type: "coins", val: 500 },
+      { label: "Пусто", color: "#1e293b", type: "none", val: 0 }
+    ];
+    let currentAngle = 0;
+    let isSpinning = false;
+
+    function drawWheel() {
+      const cx = 125, cy = 125, r = 120;
+      const arc = (2 * Math.PI) / sectors.length;
+      wCtx.clearRect(0, 0, 250, 250);
+
+      sectors.forEach((sec, i) => {
+        const angle = currentAngle + i * arc;
+        wCtx.beginPath();
+        wCtx.fillStyle = sec.color;
+        wCtx.moveTo(cx, cy);
+        wCtx.arc(cx, cy, r, angle, angle + arc);
+        wCtx.fill();
+
+        wCtx.save();
+        wCtx.translate(cx, cy);
+        wCtx.rotate(angle + arc / 2);
+        wCtx.fillStyle = "#fff";
+        wCtx.font = "bold 13px sans-serif";
+        wCtx.textAlign = "right";
+        wCtx.fillText(sec.label, r - 14, 5);
+        wCtx.restore();
+      });
+    }
+
+    function spinWheel() {
+      if (isSpinning) return;
+      if (state.spins <= 0) {
+        document.getElementById("wheelResult").textContent = "Спины закончились! Сыграй в Плинко или Монету.";
+        return;
+      }
+      state.spins--;
+      updateUI();
+      isSpinning = true;
+      document.getElementById("spinBtn").disabled = true;
+
+      const spinDuration = 3000;
+      const extraRotation = (Math.PI * 2 * 5) + Math.random() * Math.PI * 2;
+      const startAngle = currentAngle;
+      const startTime = performance.now();
+
+      function animate(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / spinDuration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        currentAngle = startAngle + extraRotation * ease;
+        drawWheel();
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          isSpinning = false;
+          document.getElementById("spinBtn").disabled = false;
+          const arc = (2 * Math.PI) / sectors.length;
+          const pointerAngle = (1.5 * Math.PI - (currentAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+          const winIndex = Math.floor(pointerAngle / arc) % sectors.length;
+          const prize = sectors[winIndex];
+
+          if (prize.type === "coins") {
+            state.score += prize.val;
+            document.getElementById("wheelResult").textContent = `Выигрыш: +${prize.val} 💰!`;
+          } else if (prize.type === "spins") {
+            state.spins += prize.val;
+            document.getElementById("wheelResult").textContent = `Бонус: +${prize.val} ⚡!`;
+          } else {
+            document.getElementById("wheelResult").textContent = "Мимо! Попробуй ещё раз.";
+          }
+          updateUI();
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
+    /* ================= 2. ПЛИНКО (ПЛАВНАЯ ФИЗИКА) ================= */
+    const pCanvas = document.getElementById("plinkoCanvas");
+    const pCtx = pCanvas.getContext("2d");
+    const mults = [5, 2, 0.5, 0.2, 0.5, 2, 5];
+    let plinkoBusy = false;
+
+    function getPegs() {
+      const pegs = [];
+      const rows = 6;
+      for (let r = 0; r < rows; r++) {
+        const cols = r + 3;
+        const spacingX = 38;
+        const startX = 160 - ((cols - 1) * spacingX) / 2;
+        const y = 46 + r * 28;
+        for (let c = 0; c < cols; c++) {
+          pegs.push({ x: startX + c * spacingX, y, r: 4 });
+        }
+      }
+      return pegs;
+    }
+
+    function drawPlinkoBoard(ball = null) {
+      pCtx.clearRect(0, 0, 320, 260);
+      const pegs = getPegs();
+      pCtx.fillStyle = "#94a3b8";
+      pegs.forEach(p => {
+        pCtx.beginPath();
+        pCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        pCtx.fill();
+      });
+
+      const slotW = 320 / mults.length;
+      mults.forEach((m, i) => {
+        pCtx.fillStyle = m >= 2 ? "#d97706" : m >= 1 ? "#2563eb" : "#334155";
+        pCtx.fillRect(i * slotW + 2, 226, slotW - 4, 26);
+        pCtx.fillStyle = "#fff";
+        pCtx.font = "bold 11px sans-serif";
+        pCtx.textAlign = "center";
+        pCtx.fillText(`x${m}`, i * slotW + slotW / 2, 243);
+      });
+
+      if (ball) {
+        pCtx.fillStyle = "#38bdf8";
+        pCtx.beginPath();
+        pCtx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+        pCtx.fill();
+      }
+    }
+
+    function dropPlinko() {
+      if (plinkoBusy) return;
+      const bet = 50;
+      if (state.score < bet) {
+        document.getElementById("plinkoResult").textContent = "Нужно минимум 50 💰 для броска!";
+        return;
+      }
+      state.score -= bet;
+      updateUI();
+      plinkoBusy = true;
+      document.getElementById("plinkoBtn").disabled = true;
+
+      let ball = {
+        x: 160 + (Math.random() - 0.5) * 8,
+        y: 16,
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: 1.2,
+        r: 7
+      };
+      const pegs = getPegs();
+      const gravity = 0.22;
+      const restitution = 0.55;
+
+      function step() {
+        ball.vy += gravity;
+        ball.x += ball.vx;
+        ball.y += ball.vy;
+
+        for (let i = 0; i < pegs.length; i++) {
+          const p = pegs[i];
+          const dx = ball.x - p.x;
+          const dy = ball.y - p.y;
+          const minDist = ball.r + p.r;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist > 0 && dist < minDist) {
+            const nx = dx / dist;
+            const ny = dy / dist;
+
+            // Плавно выталкиваем шарик за пределы штырька, чтобы не застревал
+            const overlap = minDist - dist;
+            ball.x += nx * overlap;
+            ball.y += ny * overlap;
+
+            // Отражение скорости вдоль нормали
+            const vn = ball.vx * nx + ball.vy * ny;
+            if (vn < 0) {
+              ball.vx -= (1 + restitution) * vn * nx;
+              ball.vy -= (1 + restitution) * vn * ny;
+              // Лёгкий горизонтальный толчок в сторону от центра штырька
+              const nudge = nx >= 0 ? 0.65 : -0.65;
+              ball.vx += nudge * (0.5 + Math.random() * 0.5);
+            }
+          }
+        }
+
+        // Ограничение скорости и боковые стенки
+        ball.vx = Math.max(-3.6, Math.min(3.6, ball.vx));
+        ball.vy = Math.min(7.5, ball.vy);
+
+        if (ball.x - ball.r < 6) {
+          ball.x = 6 + ball.r;
+          ball.vx = Math.abs(ball.vx) * 0.7;
+        }
+        if (ball.x + ball.r > 314) {
+          ball.x = 314 - ball.r;
+          ball.vx = -Math.abs(ball.vx) * 0.7;
+        }
+
+        drawPlinkoBoard(ball);
+
+        if (ball.y + ball.r < 226) {
+          requestAnimationFrame(step);
+        } else {
+          ball.y = 226 - ball.r;
+          drawPlinkoBoard(ball);
+
+          const slotW = 320 / mults.length;
+          const idx = Math.min(mults.length - 1, Math.max(0, Math.floor(ball.x / slotW)));
+          const win = Math.round(bet * mults[idx]);
+          state.score += win;
+          document.getElementById("plinkoResult").textContent = `Лунка x${mults[idx]} → Выигрыш: +${win} 💰`;
+          plinkoBusy = false;
+          document.getElementById("plinkoBtn").disabled = false;
+          updateUI();
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    /* ================= 3. ОРЁЛ И РЕШКА ================= */
+    let coinBusy = false;
+    function flipCoin(choice) {
+      if (coinBusy) return;
+      const bet = 50;
+      if (state.score < bet) {
+        document.getElementById("coinResult").textContent = "Нужно минимум 50 💰 для ставки!";
+        return;
+      }
+      state.score -= bet;
+      updateUI();
+      coinBusy = true;
+
+      const coinEl = document.getElementById("coinVisual");
+      coinEl.classList.remove("coin-flip");
+      void coinEl.offsetWidth;
+      coinEl.classList.add("coin-flip");
+
+      setTimeout(() => {
+        const outcome = Math.random() < 0.5 ? "heads" : "tails";
+        coinEl.textContent = outcome === "heads" ? "🦅" : "🪙";
+        if (outcome === choice) {
+          state.score += bet * 2;
+          document.getElementById("coinResult").textContent = "Угадал! +100 💰";
+        } else {
+          document.getElementById("coinResult").textContent = "Не повезло! Попробуй ещё.";
+        }
+        coinBusy = false;
+        updateUI();
+      }, 700);
+    }
+
+    drawWheel();
+    drawPlinkoBoard();
+    updateUI();
+  </script>
 </body>
 </html>
-
-
-
-
-
