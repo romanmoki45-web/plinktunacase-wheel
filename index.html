@@ -7,1156 +7,851 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg: #0e1117;
-      --card: #161b26;
-      --card-light: #1f2636;
+      --bg: #0b0f17;
+      --surface: #131a26;
+      --surface-2: #1b2434;
+      --border: rgba(255, 255, 255, 0.09);
       --text: #f3f6fc;
-      --muted: #8b95a5;
+      --muted: #8f9bb3;
       --accent: #3b82f6;
-      --gold: #fbbf24;
+      --accent-2: #22c55e;
+      --gold: #f59e0b;
+      --danger: #ef4444;
     }
 
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
 
     body {
-      background: var(--bg);
+      margin: 0;
+      padding: 0 0 84px 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(circle at top, #172236 0%, var(--bg) 55%);
       color: var(--text);
       min-height: 100vh;
-      padding: 12px 12px 60px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
     }
 
-    .container {
-      width: 100%;
-      max-width: 440px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    /* Профиль и баланс */
-    .header-card {
-      background: var(--card);
-      border-radius: 16px;
-      padding: 12px 14px;
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border: 1px solid rgba(255,255,255,0.06);
+      gap: 10px;
+      padding: 12px 14px;
+      background: rgba(11, 15, 23, 0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
     }
 
-    .profile-box {
+    .brand {
       display: flex;
       align-items: center;
       gap: 10px;
       min-width: 0;
     }
 
-    .avatar-wrap {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
+    .brand-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #2563eb, #06b6d4);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
-      background: #232a3b;
-      position: relative;
+      font-weight: 800;
+      font-size: 16px;
       flex-shrink: 0;
-      transition: all 0.25s ease;
+      border: 2px solid rgba(255, 255, 255, 0.16);
     }
 
-    /* Редкость: от простых редких к красивым легендарным */
-    .rarity-common {
-      border: 2px solid #64748b;
-    }
-    .rarity-rare {
-      border: 2px solid #3b82f6;
-      background: #172554;
-    }
-    .rarity-superrare {
-      border: 3px solid #10b981;
-      box-shadow: 0 0 8px rgba(16, 185, 129, 0.35);
-      background: #064e3b;
-    }
-    .rarity-epic {
-      border: 3px solid #a855f7;
-      box-shadow: 0 0 14px rgba(168, 85, 247, 0.7);
-      background: linear-gradient(135deg, #3b0764, #1e1b4b);
-    }
-    .rarity-mythic {
-      border: 3px solid #ef4444;
-      box-shadow: 0 0 18px rgba(239, 68, 68, 0.85);
-      background: linear-gradient(135deg, #7f1d1d, #450a0a);
-      animation: pulseMythic 1.8s infinite;
-    }
-    .rarity-legendary {
-      border: 3px solid transparent;
-      background:
-        linear-gradient(135deg, #422006, #78350f) padding-box,
-        linear-gradient(45deg, #fde047, #f59e0b, #fffbeb, #eab308) border-box;
-      box-shadow: 0 0 22px rgba(251, 191, 36, 0.95), inset 0 0 10px rgba(253, 224, 71, 0.45);
-      animation: glowLeg 2.2s infinite alternate;
-    }
-
-    @keyframes pulseMythic {
-      0%, 100% { box-shadow: 0 0 12px rgba(239, 68, 68, 0.7); }
-      50% { box-shadow: 0 0 22px rgba(239, 68, 68, 1); }
-    }
-
-    @keyframes glowLeg {
-      0% { box-shadow: 0 0 16px rgba(251, 191, 36, 0.8); transform: scale(1); }
-      100% { box-shadow: 0 0 28px rgba(253, 224, 71, 1); transform: scale(1.04); }
-    }
-
-    .user-meta {
-      overflow: hidden;
-    }
-    .user-meta h3 {
-      font-size: 15px;
+    .brand-title {
       font-weight: 700;
+      font-size: 15px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .user-meta span {
-      font-size: 12px;
-      color: var(--muted);
-    }
 
-    .stats-pill {
-      text-align: right;
-      flex-shrink: 0;
-    }
-    .stats-pill .coins {
-      font-size: 16px;
-      font-weight: 800;
-      color: var(--gold);
-    }
-    .stats-pill .spins {
-      font-size: 12px;
-      color: #60a5fa;
-      font-weight: 600;
-    }
-    .stats-pill .timer-sub {
+    .brand-sub {
       font-size: 11px;
-      color: #fbbf24;
-      font-weight: 600;
-      margin-top: 2px;
-    }
-
-    /* Шкала Топа */
-    .top-bar-card {
-      background: var(--card);
-      border-radius: 14px;
-      padding: 10px 14px;
-      border: 1px solid rgba(255,255,255,0.06);
-    }
-    .top-bar-header {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      margin-bottom: 6px;
       color: var(--muted);
     }
-    .top-bar-header strong {
-      color: var(--text);
-    }
-    .progress-track {
-      width: 100%;
-      height: 8px;
-      background: #232a3b;
-      border-radius: 99px;
-      overflow: hidden;
-    }
-    .progress-fill {
-      height: 100%;
-      width: 100%;
-      background: linear-gradient(90deg, #3b82f6, #fbbf24);
-      border-radius: 99px;
-      transition: width 0.35s ease;
-    }
 
-    /* Навигация: 3 игры + Профиль */
-    .tabs {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 5px;
-      background: var(--card);
-      padding: 5px;
-      border-radius: 14px;
-    }
-    .tab-btn {
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      padding: 8px 3px;
-      border-radius: 10px;
-      font-size: 12px;
+    .balance-pill {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 7px 12px;
       font-weight: 700;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .tab-btn.active {
-      background: var(--accent);
-      color: #fff;
+      font-size: 13px;
+      color: #fde68a;
+      white-space: nowrap;
     }
 
-    .page-section {
-      display: none;
-      width: 100%;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .page-section.active {
-      display: flex;
+    .container {
+      max-width: 540px;
+      margin: 0 auto;
+      padding: 14px;
     }
 
-    /* Игровая зона */
-    .game-card {
-      background: var(--card);
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 18px;
       padding: 16px;
-      border: 1px solid rgba(255,255,255,0.06);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-    .game-sub {
-      display: none;
-      width: 100%;
-      flex-direction: column;
-      align-items: center;
-    }
-    .game-sub.active {
-      display: flex;
+      margin-bottom: 14px;
     }
 
-    .wheel-wrap {
-      position: relative;
-      width: 250px;
-      height: 250px;
-      margin: 8px 0 14px;
+    .card h2 {
+      margin: 0 0 6px 0;
+      font-size: 18px;
     }
-    .pointer {
-      position: absolute;
-      top: -8px;
-      left: 50%;
-      transform: translateX(-50%);
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0 0 12px 0;
+    }
+
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      transition: transform 0.12s ease, opacity 0.15s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-green {
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+    }
+
+    .wheel-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .wheel-pointer {
       width: 0;
       height: 0;
-      border-left: 12px solid transparent;
-      border-right: 12px solid transparent;
-      border-top: 22px solid #ef4444;
-      z-index: 5;
-    }
-    canvas {
-      border-radius: 12px;
-      display: block;
-    }
-    #wheelCanvas {
-      border-radius: 50%;
+      border-left: 11px solid transparent;
+      border-right: 11px solid transparent;
+      border-top: 20px solid var(--gold);
+      margin-bottom: -8px;
+      z-index: 2;
     }
 
-    .action-btn {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      color: #fff;
-      font-size: 14px;
-      font-weight: 800;
-      cursor: pointer;
-      margin-top: 8px;
-    }
-    .action-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .coin-visual {
-      width: 108px;
-      height: 108px;
+    .wheel-disc {
+      width: 220px;
+      height: 220px;
       border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, #fde047, #d97706);
-      border: 4px solid #fef08a;
+      border: 6px solid rgba(255, 255, 255, 0.16);
+      background: conic-gradient(
+        #2563eb 0deg 60deg,
+        #7c3aed 60deg 120deg,
+        #059669 120deg 180deg,
+        #d97706 180deg 240deg,
+        #db2777 240deg 300deg,
+        #0891b2 300deg 360deg
+      );
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 42px;
-      margin: 16px 0;
-      box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+      transition: transform 2.4s cubic-bezier(0.18, 0.89, 0.32, 1);
+      position: relative;
     }
-    .coin-flip {
-      animation: flipCoin 0.7s ease-in-out;
+
+    .wheel-center {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 12px;
+      text-align: center;
     }
-    @keyframes flipCoin {
-      0% { transform: rotateY(0deg) scale(1); }
-      50% { transform: rotateY(540deg) scale(1.15); }
-      100% { transform: rotateY(1080deg) scale(1); }
+
+    .status-banner {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+      text-align: center;
     }
-    .coin-choices {
+
+    .plinko-board {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .slot-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 4px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .slot-box.active {
+      border-color: var(--gold);
+      background: rgba(245, 158, 11, 0.18);
+      color: #fde68a;
+    }
+
+    .row-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      width: 100%;
-    }
-
-    .result-msg {
-      margin-top: 10px;
-      font-size: 13px;
-      font-weight: 700;
-      min-height: 20px;
-      color: #93c5fd;
-      line-height: 1.35;
-    }
-
-    /* Карточки секций */
-    .section-card {
-      background: var(--card);
-      border-radius: 16px;
-      padding: 14px;
-      border: 1px solid rgba(255,255,255,0.06);
-    }
-    .section-title {
-      font-size: 15px;
-      font-weight: 800;
       margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
     }
 
-    .name-row {
+    .choice-btn.selected {
+      outline: 2px solid var(--gold);
+      background: rgba(245, 158, 11, 0.15);
+    }
+
+    .avatars-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .avatar-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .avatar-badge {
+      display: inline-block;
+      align-self: flex-start;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+    }
+
+    .rarity-rare { background: rgba(59, 130, 246, 0.22); color: #93c5fd; }
+    .rarity-super-rare { background: rgba(16, 185, 129, 0.22); color: #6ee7b7; }
+    .rarity-epic { background: rgba(168, 85, 247, 0.22); color: #d8b4fe; }
+    .rarity-mythic { background: rgba(244, 63, 94, 0.22); color: #fda4af; }
+    .rarity-legendary { background: rgba(245, 158, 11, 0.25); color: #fcd34d; }
+
+    .avatar-name {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .avatar-price {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .input-row {
       display: flex;
       gap: 8px;
-      margin-top: 8px;
+      margin-bottom: 12px;
     }
-    .name-input {
+
+    .input-row input {
       flex: 1;
-      background: var(--card-light);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 10px;
-      padding: 9px 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
       color: var(--text);
       font-size: 14px;
-      outline: none;
-    }
-    .name-input:focus {
-      border-color: var(--accent);
-    }
-    .small-btn {
-      border: none;
-      border-radius: 10px;
-      padding: 0 14px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      background: var(--accent);
-      color: #fff;
-    }
-    .small-btn.secondary {
-      background: var(--card-light);
-      color: var(--muted);
     }
 
-    .stars-shop-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .star-item {
-      background: var(--card-light);
-      border-radius: 14px;
-      padding: 10px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      border: 1px solid transparent;
-    }
-    .star-item.equipped {
-      border-color: #60a5fa;
-      background: rgba(59, 130, 246, 0.12);
-    }
-    .star-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .star-info h4 {
-      font-size: 14px;
-      font-weight: 700;
-    }
-    .star-info p {
-      font-size: 11px;
-      color: var(--muted);
-    }
-    .star-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      align-items: flex-end;
-      flex-shrink: 0;
-    }
-    .stars-buy-btn {
-      border: none;
-      border-radius: 9px;
-      padding: 6px 11px;
-      font-size: 12px;
-      font-weight: 800;
-      cursor: pointer;
-      background: linear-gradient(135deg, #f59e0b, #eab308);
-      color: #111827;
-    }
-    .equip-btn {
-      border: none;
-      border-radius: 9px;
-      padding: 6px 11px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      background: #2563eb;
-      color: #fff;
-    }
-    .equip-btn.active-eq {
-      background: #1e293b;
-      color: #93c5fd;
-    }
-    .demo-unlock-btn {
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      font-size: 10px;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-
-    .top-list {
+    .leaderboard-list {
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
-    .top-row {
+
+    .leader-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: var(--card-light);
-      padding: 8px 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
       border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
     }
-    .top-row.me {
-      border: 1px solid #3b82f6;
+
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 30;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      background: rgba(11, 15, 23, 0.94);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      padding: 6px 4px env(safe-area-inset-bottom, 6px);
     }
-    .top-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .rank-num {
-      font-weight: 800;
-      width: 20px;
-      font-size: 13px;
+
+    .nav-btn {
+      background: none;
+      border: none;
       color: var(--muted);
-    }
-    .rank-1 { color: #fbbf24; }
-    .rank-2 { color: #cbd5e1; }
-    .rank-3 { color: #d97706; }
-
-    .mini-av {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      background: #232a3b;
-      flex-shrink: 0;
-    }
-
-    .hint-note {
       font-size: 11px;
-      color: var(--muted);
-      line-height: 1.4;
-      margin-top: 8px;
-      background: rgba(255,255,255,0.03);
-      padding: 8px 10px;
+      font-weight: 600;
+      padding: 6px 2px;
       border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .nav-btn.active {
+      color: var(--text);
+      background: var(--surface-2);
+    }
+
+    .toast {
+      position: fixed;
+      top: 66px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      padding: 9px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 50;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      max-width: 90%;
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    .hidden {
+      display: none !important;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Шапка профиля -->
-    <div class="header-card">
-      <div class="profile-box">
-        <div id="myAvatar" class="avatar-wrap rarity-common">🐟</div>
-        <div class="user-meta">
-          <h3 id="playerName">Игрок</h3>
-          <span id="myRarityLabel">Базовый</span>
-        </div>
-      </div>
-      <div class="stats-pill">
-        <div class="coins"><span id="scoreVal">200</span> 💰</div>
-        <div class="spins">Спины: <span id="spinsVal">5</span> ⚡</div>
-        <div id="headerTimerSub" class="timer-sub" style="display:none;"></div>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-avatar" id="header-avatar">PT</div>
+      <div>
+        <div class="brand-title" id="header-name">Игрок</div>
+        <div class="brand-sub">PlinktunaCase</div>
       </div>
     </div>
+    <div class="balance-pill" id="header-balance">⭐ 0</div>
+  </header>
 
-    <!-- Шкала Топа -->
-    <div class="top-bar-card">
-      <div class="top-bar-header">
-        <span>Твоё место: <strong id="myRankText">#1</strong></span>
-        <span>До Топ-1: <strong id="toTopText">0 💰</strong></span>
-      </div>
-      <div class="progress-track">
-        <div id="topProgressFill" class="progress-fill"></div>
-      </div>
-    </div>
+  <div class="toast" id="toast"></div>
 
-    <!-- Вкладки: 3 игры + Профиль -->
-    <div class="tabs">
-      <button class="tab-btn active" onclick="switchTopTab('games', 'wheel', this)">🎡 Фортуна</button>
-      <button class="tab-btn" onclick="switchTopTab('games', 'plinko', this)">🔵 Плинко</button>
-      <button class="tab-btn" onclick="switchTopTab('games', 'coin', this)">🪙 Монета</button>
-      <button class="tab-btn" onclick="switchTopTab('profile', null, this)">👤 Профиль</button>
-    </div>
-
-    <!-- РАЗДЕЛ ИГР -->
-    <div id="section-games" class="page-section active">
-      <div class="game-card">
-        <!-- 1. КОЛЕСО ФОРТУНЫ -->
-        <div id="game-wheel" class="game-sub active">
-          <div class="wheel-wrap">
-            <div class="pointer"></div>
-            <canvas id="wheelCanvas" width="250" height="250"></canvas>
+  <main class="container">
+    <!-- Вкладка: Фортуна -->
+    <section id="tab-wheel" class="tab-panel">
+      <div class="card">
+        <h2>Колесо фортуны</h2>
+        <p class="muted">Бесплатных прокрутов на цикл: 3. После исчерпания включается перезарядка на 24 часа.</p>
+        <div class="wheel-box">
+          <div class="wheel-pointer"></div>
+          <div class="wheel-disc" id="wheel-disc">
+            <div class="wheel-center">SPIN</div>
           </div>
-          <button id="spinBtn" class="action-btn" onclick="spinWheel()">КРУТИТЬ КОЛЕСО (1 ⚡)</button>
-          <div id="wheelResult" class="result-msg">Испытай удачу!</div>
-        </div>
-
-        <!-- 2. ПЛИНКО -->
-        <div id="game-plinko" class="game-sub">
-          <canvas id="plinkoCanvas" width="320" height="260"></canvas>
-          <button id="plinkoBtn" class="action-btn" onclick="dropPlinko()">БРОСИТЬ ШАРИК (50 💰)</button>
-          <div id="plinkoResult" class="result-msg">Попади в крайние лунки x5!</div>
-        </div>
-
-        <!-- 3. ОРЁЛ И РЕШКА -->
-        <div id="game-coin" class="game-sub">
-          <p style="font-size:13px; color:var(--muted);">Ставка: 50 💰 • Выигрыш: 100 💰</p>
-          <div id="coinVisual" class="coin-visual">🦅</div>
-          <div class="coin-choices">
-            <button class="action-btn" onclick="flipCoin('heads')">🦅 ОРЁЛ</button>
-            <button class="action-btn" onclick="flipCoin('tails')">🪙 РЕШКА</button>
-          </div>
-          <div id="coinResult" class="result-msg">Выбери сторону монеты</div>
+          <div class="status-banner" id="wheel-status">Загрузка...</div>
+          <button class="btn" id="spin-btn" onclick="spinWheel()">Крутить колесо</button>
         </div>
       </div>
 
-      <!-- Таблица лидеров (только реальные игроки) -->
-      <div class="section-card">
-        <div class="section-title">
-          <span>🏆 Топ игроков</span>
-          <span style="font-size:11px; color:var(--muted);">Только реальные игроки</span>
-        </div>
-        <div id="topList" class="top-list"></div>
-        <div class="hint-note">
-          Чтобы игроки с разных устройств видели друг друга в общем топе автоматически, нужно подключить общую базу/сервер для бота.
-        </div>
+      <div class="card">
+        <h2>Топ игроков</h2>
+        <p class="muted">Рейтинг формируется только из реальных профилей.</p>
+        <div class="leaderboard-list" id="leaderboard-list"></div>
       </div>
-    </div>
+    </section>
 
-    <!-- ОТДЕЛЬНАЯ ВКЛАДКА ПРОФИЛЯ -->
-    <div id="section-profile" class="page-section">
-      <div class="section-card">
-        <div class="section-title">
-          <span>✏️ Имя в игре</span>
+    <!-- Вкладка: Плинко -->
+    <section id="tab-plinko" class="tab-panel hidden">
+      <div class="card">
+        <h2>Плинко</h2>
+        <p class="muted">Ставка 25 ⭐. Шар падает в один из множителей ниже.</p>
+        <div class="plinko-board" id="plinko-slots">
+          <div class="slot-box" data-mult="0.5">0.5x</div>
+          <div class="slot-box" data-mult="1">1x</div>
+          <div class="slot-box" data-mult="2">2x</div>
+          <div class="slot-box" data-mult="1">1x</div>
+          <div class="slot-box" data-mult="0.5">0.5x</div>
         </div>
-        <p style="font-size:12px; color:var(--muted);">Имя отображается в профиле и таблице топа.</p>
-        <div class="name-row">
-          <input id="nameInput" class="name-input" type="text" maxlength="20" placeholder="Введи новое имя..." />
-          <button class="small-btn" onclick="saveCustomName()">Сохранить</button>
-          <button class="small-btn secondary" onclick="resetTelegramName()">TG</button>
-        </div>
-        <div id="nameStatus" class="result-msg" style="text-align:left; font-size:12px;"></div>
+        <div class="status-banner" id="plinko-result" style="margin-bottom: 12px;">Нажмите «Бросить шар»</div>
+        <button class="btn btn-green" id="plinko-btn" onclick="playPlinko()">Бросить шар (25 ⭐)</button>
       </div>
+    </section>
 
-      <div class="section-card">
-        <div class="section-title">
-          <span>⭐ Аватарки и обводки за Звёзды</span>
-          <span style="font-size:11px; color:var(--gold);">10★ – 50★</span>
+    <!-- Вкладка: Монета -->
+    <section id="tab-coin" class="tab-panel hidden">
+      <div class="card">
+        <h2>Орёл или решка</h2>
+        <p class="muted">Выберите сторону и поставьте 20 ⭐. При победе выигрыш 40 ⭐.</p>
+        <div class="row-2">
+          <button type="button" class="btn btn-secondary choice-btn selected" id="coin-heads" onclick="selectCoinSide('heads')">Орёл</button>
+          <button type="button" class="btn btn-secondary choice-btn" id="coin-tails" onclick="selectCoinSide('tails')">Решка</button>
         </div>
-        <div id="starsShopList" class="stars-shop-list"></div>
-        <div class="hint-note">
-          Для реального списания Telegram Stars нужен обработчик оплаты на стороне бота (`@plinktunacase_bot`). Кнопка <b>«Тест-выдача»</b> позволяет сразу примерить любой уровень на GitHub Pages.
-        </div>
+        <div class="status-banner" id="coin-result" style="margin-bottom: 12px;">Выбрано: Орёл</div>
+        <button class="btn" onclick="playCoin()">Подбросить монету (20 ⭐)</button>
       </div>
-    </div>
-  </div>
+    </section>
+
+    <!-- Вкладка: Аватарки (без тестовой бесплатной выдачи) -->
+    <section id="tab-avatars" class="tab-panel hidden">
+      <div class="card">
+        <h2>Аватарки</h2>
+        <p class="muted">Покупайте аватарки за ⭐ и надевайте их в своём профиле.</p>
+        <div class="avatars-grid" id="avatars-grid"></div>
+      </div>
+    </section>
+
+    <!-- Вкладка: Профиль -->
+    <section id="tab-profile" class="tab-panel hidden">
+      <div class="card">
+        <h2>Профиль</h2>
+        <p class="muted">Настройте отображаемое имя игрока. Прогресс сохраняется локально.</p>
+        <div class="input-row">
+          <input type="text" id="nickname-input" maxlength="24" placeholder="Введите имя игрока" />
+          <button type="button" class="btn btn-secondary" style="width: auto;" onclick="saveNickname()">Сохранить</button>
+        </div>
+        <div class="status-banner" id="profile-stats"></div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button type="button" class="nav-btn active" data-tab="wheel" onclick="switchTab('wheel')">Фортуна</button>
+    <button type="button" class="nav-btn" data-tab="plinko" onclick="switchTab('plinko')">Плинко</button>
+    <button type="button" class="nav-btn" data-tab="coin" onclick="switchTab('coin')">Монета</button>
+    <button type="button" class="nav-btn" data-tab="avatars" onclick="switchTab('avatars')">Аватарки</button>
+    <button type="button" class="nav-btn" data-tab="profile" onclick="switchTab('profile')">Профиль</button>
+  </nav>
 
   <script>
-    const STORAGE_KEY = "plinktunacase_save_v2";
-    const DAILY_SPINS_LIMIT = 5;
-    const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 часа
+    const COOLDOWN_MS = 24 * 60 * 60 * 1000;
+    const MAX_FREE_SPINS = 3;
+    const STORAGE_KEY = 'plinktunacase_save_v1';
+    const LEADERBOARD_KEY = 'plinktunacase_real_players_v1';
 
-    const tg = window.Telegram && window.Telegram.WebApp;
-    let tgDefaultName = "Игрок";
-    let tgUserId = "local_player";
+    const WHEEL_REWARDS = [
+      { label: '+15 ⭐', stars: 15, angle: 30 },
+      { label: '+30 ⭐', stars: 30, angle: 90 },
+      { label: '+10 ⭐', stars: 10, angle: 150 },
+      { label: '+75 ⭐', stars: 75, angle: 210 },
+      { label: '+25 ⭐', stars: 25, angle: 270 },
+      { label: '+150 ⭐', stars: 150, angle: 330 }
+    ];
+
+    const AVATARS = [
+      { id: 'rare_1', name: 'Blue Fin', rarity: 'Rare', rarityClass: 'rarity-rare', price: 50, short: 'BF' },
+      { id: 'super_rare_1', name: 'Emerald Tide', rarity: 'Super Rare', rarityClass: 'rarity-super-rare', price: 120, short: 'ET' },
+      { id: 'epic_1', name: 'Neon Abyss', rarity: 'Epic', rarityClass: 'rarity-epic', price: 250, short: 'NA' },
+      { id: 'mythic_1', name: 'Crimson Leviathan', rarity: 'Mythic', rarityClass: 'rarity-mythic', price: 500, short: 'CL' },
+      { id: 'legendary_1', name: 'Golden Tuna King', rarity: 'Legendary', rarityClass: 'rarity-legendary', price: 1000, short: 'TK' }
+    ];
+
+    const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
     if (tg) {
       tg.ready();
       tg.expand();
-      if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        if (tg.initDataUnsafe.user.first_name) {
-          tgDefaultName = tg.initDataUnsafe.user.first_name;
-        }
-        if (tg.initDataUnsafe.user.id) {
-          tgUserId = String(tg.initDataUnsafe.user.id);
-        }
-      }
     }
 
-    const AVATARS = [
-      { id: "common", name: "Новичок", icon: "🐟", rarityClass: "rarity-common", stars: 0, desc: "Простой базовый контур", label: "Базовый" },
-      { id: "rare", name: "Редкая", icon: "🐬", rarityClass: "rarity-rare", stars: 10, desc: "Простая синяя рамка", label: "Редкая • 10★" },
-      { id: "superrare", name: "Сверхредкая", icon: "🦈", rarityClass: "rarity-superrare", stars: 20, desc: "Аккуратное зелёное свечение", label: "Сверхредкая • 20★" },
-      { id: "epic", name: "Эпик", icon: "🐙", rarityClass: "rarity-epic", stars: 30, desc: "Фиолетовая неоновая рамка", label: "Эпик • 30★" },
-      { id: "mythic", name: "Мифик", icon: "🐉", rarityClass: "rarity-mythic", stars: 40, desc: "Пульсирующее красное свечение", label: "Мифик • 40★" },
-      { id: "legendary", name: "Легендарная", icon: "👑", rarityClass: "rarity-legendary", stars: 50, desc: "Золотая переливающаяся корона-рамка", label: "Легендарная • 50★" }
-    ];
+    function getInitialPlayerName() {
+      const tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+      if (tgUser && (tgUser.first_name || tgUser.username)) {
+        return tgUser.first_name || tgUser.username;
+      }
+      return 'Игрок';
+    }
 
     function loadState() {
-      const fallback = {
-        userId: tgUserId,
-        score: 200,
-        spins: DAILY_SPINS_LIMIT,
-        nextSpinResetAt: null,
-        customName: tgDefaultName,
-        equippedId: "common",
-        unlocked: ["common"]
-      };
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return fallback;
-        const parsed = JSON.parse(raw);
-        return {
-          userId: typeof parsed.userId === "string" && parsed.userId ? parsed.userId : tgUserId,
-          score: typeof parsed.score === "number" ? parsed.score : 200,
-          spins: typeof parsed.spins === "number" ? parsed.spins : DAILY_SPINS_LIMIT,
-          nextSpinResetAt: typeof parsed.nextSpinResetAt === "number" ? parsed.nextSpinResetAt : null,
-          customName: typeof parsed.customName === "string" && parsed.customName.trim() ? parsed.customName : tgDefaultName,
-          equippedId: AVATARS.some(a => a.id === parsed.equippedId) ? parsed.equippedId : "common",
-          unlocked: Array.isArray(parsed.unlocked) && parsed.unlocked.length ? [...new Set(["common", ...parsed.unlocked])] : ["common"]
-        };
-      } catch (e) {
-        return fallback;
-      }
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return {
+            id: parsed.id || (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && String(tg.initDataUnsafe.user.id)) || 'local_player',
+            name: parsed.name || getInitialPlayerName(),
+            balance: typeof parsed.balance === 'number' ? parsed.balance : 100,
+            spinsLeft: typeof parsed.spinsLeft === 'number' ? parsed.spinsLeft : MAX_FREE_SPINS,
+            cooldownEnd: typeof parsed.cooldownEnd === 'number' ? parsed.cooldownEnd : 0,
+            ownedAvatars: Array.isArray(parsed.ownedAvatars) ? parsed.ownedAvatars : [],
+            equippedAvatar: parsed.equippedAvatar || null,
+            wheelRotation: typeof parsed.wheelRotation === 'number' ? parsed.wheelRotation : 0
+          };
+        }
+      } catch (e) {}
+
+      return {
+        id: (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && String(tg.initDataUnsafe.user.id)) || 'local_player',
+        name: getInitialPlayerName(),
+        balance: 100,
+        spinsLeft: MAX_FREE_SPINS,
+        cooldownEnd: 0,
+        ownedAvatars: [],
+        equippedAvatar: null,
+        wheelRotation: 0
+      };
     }
 
-    const state = loadState();
+    let state = loadState();
+    let coinSide = 'heads';
+    let isSpinning = false;
+    let isPlinkoRunning = false;
 
-    function saveState() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      } catch (e) {}
+    function showToast(text) {
+      const el = document.getElementById('toast');
+      el.textContent = text;
+      el.classList.add('show');
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => el.classList.remove('show'), 2200);
     }
 
     function formatDuration(ms) {
       const totalSec = Math.max(0, Math.floor(ms / 1000));
-      const hours = Math.floor(totalSec / 3600);
-      const mins = Math.floor((totalSec % 3600) / 60);
-      const secs = totalSec % 60;
-      const pad = n => String(n).padStart(2, "0");
-      return `${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+      const h = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+      const m = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+      const s = String(totalSec % 60).padStart(2, '0');
+      return `${h}:${m}:${s}`;
     }
 
-    // Проверка и восстановление спинов раз в 24 часа
-    function checkSpinCooldown() {
-      const now = Date.now();
-      if (state.nextSpinResetAt && now >= state.nextSpinResetAt) {
-        state.nextSpinResetAt = null;
-        if (state.spins < DAILY_SPINS_LIMIT) {
-          state.spins = DAILY_SPINS_LIMIT;
-        }
+    function syncCooldown() {
+      if (state.cooldownEnd > 0 && Date.now() >= state.cooldownEnd) {
+        state.cooldownEnd = 0;
+        state.spinsLeft = MAX_FREE_SPINS;
         saveState();
       }
     }
 
-    // Точка подключения общего сервера/БД для отображения реальных игроков со всех устройств
-    async function syncSharedLeaderboard(playerEntry) {
-      // Пример места для подключения общего API/Firebase:
-      // await fetch("https://your-backend.example.com/api/leaderboard", { method: "POST", body: JSON.stringify(playerEntry) });
-      return [playerEntry];
-    }
-
-    function updateSpinTimerUI() {
-      checkSpinCooldown();
-      const now = Date.now();
-      const hasCooldown = Boolean(state.nextSpinResetAt && state.nextSpinResetAt > now);
-      const timerSubEl = document.getElementById("headerTimerSub");
-      const wheelResEl = document.getElementById("wheelResult");
-      const spinBtn = document.getElementById("spinBtn");
-
-      if (hasCooldown) {
-        const leftText = formatDuration(state.nextSpinResetAt - now);
-        timerSubEl.style.display = "block";
-        timerSubEl.textContent = `Новые спины через ${leftText}`;
-        if (state.spins <= 0 && !isSpinning) {
-          wheelResEl.textContent = `Попытки на спине закончились. Новые через ${leftText}`;
-          spinBtn.textContent = `НЕТ ПОПЫТОК (${leftText})`;
-        } else {
-          spinBtn.textContent = `КРУТИТЬ КОЛЕСО (1 ⚡)`;
+    function upsertRealPlayerLeaderboard() {
+      let list = [];
+      try {
+        const raw = localStorage.getItem(LEADERBOARD_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            list = parsed.filter((item) => item && item.id && item.isBot !== true);
+          }
         }
-      } else {
-        timerSubEl.style.display = "none";
-        spinBtn.textContent = `КРУТИТЬ КОЛЕСО (1 ⚡)`;
-      }
-    }
+      } catch (e) {}
 
-    function updateUI() {
-      checkSpinCooldown();
-      saveState();
-      document.getElementById("scoreVal").textContent = state.score;
-      document.getElementById("spinsVal").textContent = state.spins;
-      document.getElementById("playerName").textContent = state.customName;
-
-      const inputEl = document.getElementById("nameInput");
-      if (inputEl && document.activeElement !== inputEl) {
-        inputEl.value = state.customName;
-      }
-
-      const curAv = AVATARS.find(a => a.id === state.equippedId) || AVATARS[0];
-      const myAvEl = document.getElementById("myAvatar");
-      myAvEl.className = `avatar-wrap ${curAv.rarityClass}`;
-      myAvEl.textContent = curAv.icon;
-      document.getElementById("myRarityLabel").textContent = curAv.label;
-
-      updateSpinTimerUI();
-      renderStarsShop();
-      renderLeaderboard();
-    }
-
-    function switchTopTab(sectionName, gameName, btn) {
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-
-      document.getElementById("section-games").classList.toggle("active", sectionName === "games");
-      document.getElementById("section-profile").classList.toggle("active", sectionName === "profile");
-
-      if (sectionName === "games" && gameName) {
-        document.querySelectorAll(".game-sub").forEach(s => s.classList.remove("active"));
-        document.getElementById(`game-${gameName}`).classList.add("active");
-        if (gameName === "plinko") drawPlinkoBoard();
-      }
-    }
-
-    function saveCustomName() {
-      const val = document.getElementById("nameInput").value.trim();
-      if (!val) {
-        document.getElementById("nameStatus").textContent = "Имя не может быть пустым.";
-        return;
-      }
-      state.customName = val;
-      updateUI();
-      document.getElementById("nameStatus").textContent = "Имя сохранено!";
-    }
-
-    function resetTelegramName() {
-      state.customName = tgDefaultName;
-      document.getElementById("nameInput").value = tgDefaultName;
-      updateUI();
-      document.getElementById("nameStatus").textContent = `Восстановлено имя: ${tgDefaultName}`;
-    }
-
-    function requestStarPurchase(av) {
-      if (tg && typeof tg.sendData === "function") {
-        try {
-          tg.sendData(JSON.stringify({
-            action: "buy_avatar_stars",
-            avatarId: av.id,
-            stars: av.stars
-          }));
-        } catch (e) {}
-      }
-      alert(
-        `Лот: "${av.name}" (${av.stars} ⭐)\n` +
-        `Для списания реальных звёзд нужен сервер/бот, принимающий оплату Telegram Stars. ` +
-        `Для проверки вида аватарок нажми «Тест-выдача».`
-      );
-    }
-
-    function demoUnlockAvatar(id) {
-      if (!state.unlocked.includes(id)) {
-        state.unlocked.push(id);
-      }
-      state.equippedId = id;
-      updateUI();
-    }
-
-    function renderStarsShop() {
-      const list = document.getElementById("starsShopList");
-      list.innerHTML = "";
-
-      AVATARS.forEach(av => {
-        const isUnlocked = state.unlocked.includes(av.id);
-        const isEquipped = state.equippedId === av.id;
-
-        const row = document.createElement("div");
-        row.className = `star-item ${isEquipped ? "equipped" : ""}`;
-
-        let rightHtml = "";
-        if (isEquipped) {
-          rightHtml = `<button class="equip-btn active-eq">Надето</button>`;
-        } else if (isUnlocked) {
-          rightHtml = `<button class="equip-btn" onclick="equipUnlocked('${av.id}')">Надеть</button>`;
-        } else {
-          rightHtml = `
-            <button class="stars-buy-btn" onclick="requestStarPurchaseById('${av.id}')">Купить ${av.stars} ⭐</button>
-            <button class="demo-unlock-btn" onclick="demoUnlockAvatar('${av.id}')">Тест-выдача</button>
-          `;
-        }
-
-        row.innerHTML = `
-          <div class="star-left">
-            <div class="avatar-wrap ${av.rarityClass}" style="width:44px;height:44px;font-size:20px;">${av.icon}</div>
-            <div class="star-info">
-              <h4>${av.name}</h4>
-              <p>${av.desc}</p>
-            </div>
-          </div>
-          <div class="star-actions">${rightHtml}</div>
-        `;
-        list.appendChild(row);
-      });
-    }
-
-    window.equipUnlocked = function(id) {
-      state.equippedId = id;
-      updateUI();
-    };
-
-    window.requestStarPurchaseById = function(id) {
-      const av = AVATARS.find(a => a.id === id);
-      if (av) requestStarPurchase(av);
-    };
-
-    function renderLeaderboard() {
-      const curAv = AVATARS.find(a => a.id === state.equippedId) || AVATARS[0];
-      const currentPlayer = {
-        userId: state.userId,
-        name: `${state.customName} (Ты)`,
-        score: state.score,
-        icon: curAv.icon,
-        rarityClass: curAv.rarityClass,
-        isMe: true
+      const existingIdx = list.findIndex((item) => item.id === state.id);
+      const entry = {
+        id: state.id,
+        name: state.name,
+        balance: state.balance,
+        isBot: false
       };
 
-      syncSharedLeaderboard(currentPlayer);
+      if (existingIdx >= 0) {
+        list[existingIdx] = entry;
+      } else {
+        list.push(entry);
+      }
 
-      const players = [currentPlayer].sort((a, b) => b.score - a.score);
-      const topScore = players[0].score;
-
-      document.getElementById("myRankText").textContent = `#1`;
-      document.getElementById("toTopText").textContent = `0 💰 (Ты Топ-1!)`;
-      document.getElementById("topProgressFill").style.width = `100%`;
-
-      const list = document.getElementById("topList");
-      list.innerHTML = "";
-      players.forEach((p, idx) => {
-        const rankClass = idx === 0 ? "rank-1" : idx === 1 ? "rank-2" : idx === 2 ? "rank-3" : "";
-        const row = document.createElement("div");
-        row.className = `top-row ${p.isMe ? "me" : ""}`;
-        row.innerHTML = `
-          <div class="top-left">
-            <span class="rank-num ${rankClass}">#${idx + 1}</span>
-            <div class="mini-av ${p.rarityClass}">${p.icon}</div>
-            <span style="font-size:13px;font-weight:700;">${p.name}</span>
-          </div>
-          <strong style="font-size:13px;color:var(--gold);">${p.score} 💰</strong>
-        `;
-        list.appendChild(row);
-      });
+      list.sort((a, b) => b.balance - a.balance);
+      localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(list));
+      renderLeaderboard(list);
     }
 
-    /* ================= 1. КОЛЕСО ФОРТУНЫ ================= */
-    const wheelCanvas = document.getElementById("wheelCanvas");
-    const wCtx = wheelCanvas.getContext("2d");
-    const sectors = [
-      { label: "+100 💰", color: "#2563eb", type: "coins", val: 100 },
-      { label: "Пусто", color: "#334155", type: "none", val: 0 },
-      { label: "+250 💰", color: "#059669", type: "coins", val: 250 },
-      { label: "+2 ⚡", color: "#7c3aed", type: "spins", val: 2 },
-      { label: "+500 💰", color: "#d97706", type: "coins", val: 500 },
-      { label: "Пусто", color: "#1e293b", type: "none", val: 0 }
-    ];
-    let currentAngle = 0;
-    let isSpinning = false;
+    function renderLeaderboard(list) {
+      const container = document.getElementById('leaderboard-list');
+      if (!container) return;
+      const realOnly = (list || []).filter((p) => p && !p.isBot);
+      if (realOnly.length === 0) {
+        container.innerHTML = '<div class="muted">Пока нет записей</div>';
+        return;
+      }
+      container.innerHTML = realOnly
+        .slice(0, 20)
+        .map((player, index) => `
+          <div class="leader-item">
+            <span>#${index + 1} ${escapeHtml(player.name)}</span>
+            <strong>⭐ ${player.balance}</strong>
+          </div>
+        `)
+        .join('');
+    }
 
-    function drawWheel() {
-      const cx = 125, cy = 125, r = 120;
-      const arc = (2 * Math.PI) / sectors.length;
-      wCtx.clearRect(0, 0, 250, 250);
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
 
-      sectors.forEach((sec, i) => {
-        const angle = currentAngle + i * arc;
-        wCtx.beginPath();
-        wCtx.fillStyle = sec.color;
-        wCtx.moveTo(cx, cy);
-        wCtx.arc(cx, cy, r, angle, angle + arc);
-        wCtx.fill();
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      upsertRealPlayerLeaderboard();
+      renderHeader();
+      renderWheelUI();
+      renderAvatars();
+      renderProfile();
+    }
 
-        wCtx.save();
-        wCtx.translate(cx, cy);
-        wCtx.rotate(angle + arc / 2);
-        wCtx.fillStyle = "#fff";
-        wCtx.font = "bold 13px sans-serif";
-        wCtx.textAlign = "right";
-        wCtx.fillText(sec.label, r - 14, 5);
-        wCtx.restore();
-      });
+    function renderHeader() {
+      const equipped = AVATARS.find((a) => a.id === state.equippedAvatar);
+      document.getElementById('header-avatar').textContent = equipped ? equipped.short : 'PT';
+      document.getElementById('header-name').textContent = state.name;
+      document.getElementById('header-balance').textContent = `⭐ ${state.balance}`;
+    }
+
+    function renderWheelUI() {
+      syncCooldown();
+      const statusEl = document.getElementById('wheel-status');
+      const btnEl = document.getElementById('spin-btn');
+
+      if (state.cooldownEnd > Date.now()) {
+        const left = state.cooldownEnd - Date.now();
+        statusEl.textContent = `Спины закончились. Перезарядка 24ч: ${formatDuration(left)}`;
+        btnEl.disabled = true;
+      } else {
+        statusEl.textContent = `Доступно прокрутов: ${state.spinsLeft} из ${MAX_FREE_SPINS}`;
+        btnEl.disabled = isSpinning || state.spinsLeft <= 0;
+      }
     }
 
     function spinWheel() {
+      syncCooldown();
       if (isSpinning) return;
-      checkSpinCooldown();
-
-      if (state.spins <= 0) {
-        if (!state.nextSpinResetAt || state.nextSpinResetAt <= Date.now()) {
-          state.nextSpinResetAt = Date.now() + COOLDOWN_MS;
+      if (state.cooldownEnd > Date.now() || state.spinsLeft <= 0) {
+        if (state.cooldownEnd <= Date.now()) {
+          state.cooldownEnd = Date.now() + COOLDOWN_MS;
           saveState();
         }
-        updateSpinTimerUI();
+        showToast('Прокруты закончились — ждите перезарядку 24 часа');
         return;
       }
-
-      state.spins--;
-      if (state.spins === 0 && (!state.nextSpinResetAt || state.nextSpinResetAt <= Date.now())) {
-        state.nextSpinResetAt = Date.now() + COOLDOWN_MS;
-      }
-      updateUI();
 
       isSpinning = true;
-      document.getElementById("spinBtn").disabled = true;
-
-      const spinDuration = 3000;
-      const extraRotation = (Math.PI * 2 * 5) + Math.random() * Math.PI * 2;
-      const startAngle = currentAngle;
-      const startTime = performance.now();
-
-      function animate(now) {
-        const elapsed = now - startTime;
-        const progress = Math.min(elapsed / spinDuration, 1);
-        const ease = 1 - Math.pow(1 - progress, 3);
-        currentAngle = startAngle + extraRotation * ease;
-        drawWheel();
-
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        } else {
-          isSpinning = false;
-          document.getElementById("spinBtn").disabled = false;
-          const arc = (2 * Math.PI) / sectors.length;
-          const pointerAngle = (1.5 * Math.PI - (currentAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-          const winIndex = Math.floor(pointerAngle / arc) % sectors.length;
-          const prize = sectors[winIndex];
-
-          if (prize.type === "coins") {
-            state.score += prize.val;
-            document.getElementById("wheelResult").textContent = `Выигрыш: +${prize.val} 💰!`;
-          } else if (prize.type === "spins") {
-            state.spins += prize.val;
-            document.getElementById("wheelResult").textContent = `Бонус: +${prize.val} ⚡!`;
-          } else {
-            document.getElementById("wheelResult").textContent = "Мимо! Попробуй ещё раз.";
-          }
-          updateUI();
-        }
+      state.spinsLeft -= 1;
+      if (state.spinsLeft <= 0) {
+        state.spinsLeft = 0;
+        state.cooldownEnd = Date.now() + COOLDOWN_MS;
       }
-      requestAnimationFrame(animate);
-    }
 
-    /* ================= 2. ПЛИНКО ================= */
-    const pCanvas = document.getElementById("plinkoCanvas");
-    const pCtx = pCanvas.getContext("2d");
-    const mults = [5, 2, 0.5, 0.2, 0.5, 2, 5];
-    let plinkoBusy = false;
-
-    function getPegs() {
-      const pegs = [];
-      const rows = 6;
-      for (let r = 0; r < rows; r++) {
-        const cols = r + 3;
-        const spacingX = 38;
-        const startX = 160 - ((cols - 1) * spacingX) / 2;
-        const y = 46 + r * 28;
-        for (let c = 0; c < cols; c++) {
-          pegs.push({ x: startX + c * spacingX, y, r: 4 });
-        }
-      }
-      return pegs;
-    }
-
-    function drawPlinkoBoard(ball = null) {
-      pCtx.clearRect(0, 0, 320, 260);
-      const pegs = getPegs();
-      pCtx.fillStyle = "#94a3b8";
-      pegs.forEach(p => {
-        pCtx.beginPath();
-        pCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        pCtx.fill();
-      });
-
-      const slotW = 320 / mults.length;
-      mults.forEach((m, i) => {
-        pCtx.fillStyle = m >= 2 ? "#d97706" : m >= 1 ? "#2563eb" : "#334155";
-        pCtx.fillRect(i * slotW + 2, 226, slotW - 4, 26);
-        pCtx.fillStyle = "#fff";
-        pCtx.font = "bold 11px sans-serif";
-        pCtx.textAlign = "center";
-        pCtx.fillText(`x${m}`, i * slotW + slotW / 2, 243);
-      });
-
-      if (ball) {
-        pCtx.fillStyle = "#38bdf8";
-        pCtx.beginPath();
-        pCtx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
-        pCtx.fill();
-      }
-    }
-
-    function dropPlinko() {
-      if (plinkoBusy) return;
-      const bet = 50;
-      if (state.score < bet) {
-        document.getElementById("plinkoResult").textContent = "Нужно минимум 50 💰 для броска!";
-        return;
-      }
-      state.score -= bet;
-      updateUI();
-      plinkoBusy = true;
-      document.getElementById("plinkoBtn").disabled = true;
-
-      let ball = {
-        x: 160 + (Math.random() - 0.5) * 8,
-        y: 16,
-        vx: (Math.random() - 0.5) * 0.6,
-        vy: 1.2,
-        r: 7
-      };
-      const pegs = getPegs();
-      const gravity = 0.22;
-      const restitution = 0.55;
-
-      function step() {
-        ball.vy += gravity;
-        ball.x += ball.vx;
-        ball.y += ball.vy;
-
-        for (let i = 0; i < pegs.length; i++) {
-          const p = pegs[i];
-          const dx = ball.x - p.x;
-          const dy = ball.y - p.y;
-          const minDist = ball.r + p.r;
-          const dist = Math.hypot(dx, dy);
-
-          if (dist > 0 && dist < minDist) {
-            const nx = dx / dist;
-            const ny = dy / dist;
-
-            const overlap = minDist - dist;
-            ball.x += nx * overlap;
-            ball.y += ny * overlap;
-
-            const vn = ball.vx * nx + ball.vy * ny;
-            if (vn < 0) {
-              ball.vx -= (1 + restitution) * vn * nx;
-              ball.vy -= (1 + restitution) * vn * ny;
-              const nudge = nx >= 0 ? 0.65 : -0.65;
-              ball.vx += nudge * (0.5 + Math.random() * 0.5);
-            }
-          }
-        }
-
-        ball.vx = Math.max(-3.6, Math.min(3.6, ball.vx));
-        ball.vy = Math.min(7.5, ball.vy);
-
-        if (ball.x - ball.r < 6) {
-          ball.x = 6 + ball.r;
-          ball.vx = Math.abs(ball.vx) * 0.7;
-        }
-        if (ball.x + ball.r > 314) {
-          ball.x = 314 - ball.r;
-          ball.vx = -Math.abs(ball.vx) * 0.7;
-        }
-
-        drawPlinkoBoard(ball);
-
-        if (ball.y + ball.r < 226) {
-          requestAnimationFrame(step);
-        } else {
-          ball.y = 226 - ball.r;
-          drawPlinkoBoard(ball);
-
-          const slotW = 320 / mults.length;
-          const idx = Math.min(mults.length - 1, Math.max(0, Math.floor(ball.x / slotW)));
-          const win = Math.round(bet * mults[idx]);
-          state.score += win;
-          document.getElementById("plinkoResult").textContent = `Лунка x${mults[idx]} → Выигрыш: +${win} 💰`;
-          plinkoBusy = false;
-          document.getElementById("plinkoBtn").disabled = false;
-          updateUI();
-        }
-      }
-      requestAnimationFrame(step);
-    }
-
-    /* ================= 3. ОРЁЛ И РЕШКА ================= */
-    let coinBusy = false;
-    function flipCoin(choice) {
-      if (coinBusy) return;
-      const bet = 50;
-      if (state.score < bet) {
-        document.getElementById("coinResult").textContent = "Нужно минимум 50 💰 для ставки!";
-        return;
-      }
-      state.score -= bet;
-      updateUI();
-      coinBusy = true;
-
-      const coinEl = document.getElementById("coinVisual");
-      coinEl.classList.remove("coin-flip");
-      void coinEl.offsetWidth;
-      coinEl.classList.add("coin-flip");
+      const idx = Math.floor(Math.random() * WHEEL_REWARDS.length);
+      const reward = WHEEL_REWARDS[idx];
+      const disc = document.getElementById('wheel-disc');
+      const targetAngle = 360 - reward.angle;
+      const currentMod = ((state.wheelRotation % 360) + 360) % 360;
+      let delta = targetAngle - currentMod;
+      if (delta < 0) delta += 360;
+      state.wheelRotation += 360 * 4 + delta;
+      disc.style.transform = `rotate(${state.wheelRotation}deg)`;
+      renderWheelUI();
 
       setTimeout(() => {
-        const outcome = Math.random() < 0.5 ? "heads" : "tails";
-        coinEl.textContent = outcome === "heads" ? "🦅" : "🪙";
-        if (outcome === choice) {
-          state.score += bet * 2;
-          document.getElementById("coinResult").textContent = "Угадал! +100 💰";
-        } else {
-          document.getElementById("coinResult").textContent = "Не повезло! Попробуй ещё.";
-        }
-        coinBusy = false;
-        updateUI();
-      }, 700);
+        state.balance += reward.stars;
+        isSpinning = false;
+        saveState();
+        showToast(`Выигрыш: ${reward.label}`);
+      }, 2450);
     }
 
-    drawWheel();
-    drawPlinkoBoard();
-    updateUI();
-    setInterval(updateSpinTimerUI, 1000);
+    function playPlinko() {
+      if (isPlinkoRunning) return;
+      const bet = 25;
+      if (state.balance < bet) {
+        showToast('Недостаточно ⭐ для ставки (нужно 25 ⭐)');
+        return;
+      }
+
+      isPlinkoRunning = true;
+      state.balance -= bet;
+      saveState();
+
+      const slots = Array.from(document.querySelectorAll('#plinko-slots .slot-box'));
+      const targetIndex = Math.floor(Math.random() * slots.length);
+      const mult = Number(slots[targetIndex].dataset.mult);
+      const payout = Math.round(bet * mult);
+      const resultEl = document.getElementById('plinko-result');
+      resultEl.textContent = 'Шар падает...';
+
+      let step = 0;
+      const totalSteps = 10;
+      const timer = setInterval(() => {
+        slots.forEach((s) => s.classList.remove('active'));
+        const activeIdx = step === totalSteps - 1 ? targetIndex : step % slots.length;
+        slots[activeIdx].classList.add('active');
+        step++;
+
+        if (step >= totalSteps) {
+          clearInterval(timer);
+          state.balance += payout;
+          isPlinkoRunning = false;
+          saveState();
+          resultEl.textContent = `Слот ${mult}x — получено ${payout} ⭐`;
+          showToast(payout > 0 ? `Плинко: +${payout} ⭐` : 'Мимо множителя');
+        }
+      }, 110);
+    }
+
+    function selectCoinSide(side) {
+      coinSide = side;
+      document.getElementById('coin-heads').classList.toggle('selected', side === 'heads');
+      document.getElementById('coin-tails').classList.toggle('selected', side === 'tails');
+      document.getElementById('coin-result').textContent = `Выбрано: ${side === 'heads' ? 'Орёл' : 'Решка'}`;
+    }
+
+    function playCoin() {
+      const bet = 20;
+      if (state.balance < bet) {
+        showToast('Недостаточно ⭐ для ставки (нужно 20 ⭐)');
+        return;
+      }
+      state.balance -= bet;
+      const dropped = Math.random() < 0.5 ? 'heads' : 'tails';
+      const win = dropped === coinSide;
+      const prize = win ? 40 : 0;
+      state.balance += prize;
+      saveState();
+
+      const labelSide = dropped === 'heads' ? 'Орёл' : 'Решка';
+      const msg = win ? `Выпал «${labelSide}» — победа +${prize} ⭐!` : `Выпал «${labelSide}» — проигрыш -${bet} ⭐`;
+      document.getElementById('coin-result').textContent = msg;
+      showToast(msg);
+    }
+
+    function buyOrEquipAvatar(avatarId) {
+      const avatar = AVATARS.find((a) => a.id === avatarId);
+      if (!avatar) return;
+
+      if (state.ownedAvatars.includes(avatar.id)) {
+        state.equippedAvatar = avatar.id;
+        saveState();
+        showToast(`Надета аватарка «${avatar.name}»`);
+        return;
+      }
+
+      if (state.balance < avatar.price) {
+        showToast(`Недостаточно ⭐ (нужно ${avatar.price} ⭐)`);
+        return;
+      }
+
+      state.balance -= avatar.price;
+      state.ownedAvatars.push(avatar.id);
+      state.equippedAvatar = avatar.id;
+      saveState();
+      showToast(`Куплена и надета «${avatar.name}»`);
+    }
+
+    function renderAvatars() {
+      const grid = document.getElementById('avatars-grid');
+      if (!grid) return;
+
+      grid.innerHTML = AVATARS.map((avatar) => {
+        const owned = state.ownedAvatars.includes(avatar.id);
+        const equipped = state.equippedAvatar === avatar.id;
+
+        let btnText = `Купить (${avatar.price} ⭐)`;
+        if (equipped) btnText = 'Надето';
+        else if (owned) btnText = 'Надеть';
+
+        return `
+          <div class="avatar-card">
+            <span class="avatar-badge ${avatar.rarityClass}">${avatar.rarity}</span>
+            <div class="avatar-name">${escapeHtml(avatar.name)}</div>
+            <div class="avatar-price">Цена: ${avatar.price} ⭐</div>
+            <button type="button" class="btn ${owned ? 'btn-secondary' : ''}" ${equipped ? 'disabled' : ''} onclick="buyOrEquipAvatar('${avatar.id}')">
+              ${btnText}
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function saveNickname() {
+      const input = document.getElementById('nickname-input');
+      const cleaned = input.value.trim();
+      if (!cleaned) {
+        showToast('Имя не может быть пустым');
+        return;
+      }
+      state.name = cleaned;
+      saveState();
+      showToast('Имя сохранено');
+    }
+
+    function renderProfile() {
+      const input = document.getElementById('nickname-input');
+      if (input && document.activeElement !== input) {
+        input.value = state.name;
+      }
+      const equipped = AVATARS.find((a) => a.id === state.equippedAvatar);
+      document.getElementById('profile-stats').innerHTML = `
+        Баланс: <strong>⭐ ${state.balance}</strong><br />
+        Куплено аватарок: <strong>${state.ownedAvatars.length} / ${AVATARS.length}</strong><br />
+        Активная аватарка: <strong>${equipped ? escapeHtml(equipped.name) : 'По умолчанию'}</strong>
+      `;
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-panel').forEach((panel) => {
+        panel.classList.toggle('hidden', panel.id !== `tab-${tabName}`);
+      });
+      document.querySelectorAll('.nav-btn').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+      });
+    }
+
+    setInterval(renderWheelUI, 1000);
+
+    saveState();
   </script>
 </body>
 </html>
