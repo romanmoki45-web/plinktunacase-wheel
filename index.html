@@ -146,6 +146,12 @@
       color: #60a5fa;
       font-weight: 600;
     }
+    .stats-pill .timer-sub {
+      font-size: 11px;
+      color: #fbbf24;
+      font-weight: 600;
+      margin-top: 2px;
+    }
 
     /* Шкала Топа */
     .top-bar-card {
@@ -173,7 +179,7 @@
     }
     .progress-fill {
       height: 100%;
-      width: 15%;
+      width: 100%;
       background: linear-gradient(90deg, #3b82f6, #fbbf24);
       border-radius: 99px;
       transition: width 0.35s ease;
@@ -308,10 +314,11 @@
 
     .result-msg {
       margin-top: 10px;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
       min-height: 20px;
       color: #93c5fd;
+      line-height: 1.35;
     }
 
     /* Карточки секций */
@@ -330,7 +337,6 @@
       align-items: center;
     }
 
-    /* Редактор имени во вкладке Профиль */
     .name-row {
       display: flex;
       gap: 8px;
@@ -364,7 +370,6 @@
       color: var(--muted);
     }
 
-    /* Сетка аватарок за звёзды */
     .stars-shop-list {
       display: flex;
       flex-direction: column;
@@ -437,7 +442,6 @@
       cursor: pointer;
     }
 
-    /* Таблица лидеров */
     .top-list {
       display: flex;
       flex-direction: column;
@@ -500,20 +504,21 @@
         <div id="myAvatar" class="avatar-wrap rarity-common">🐟</div>
         <div class="user-meta">
           <h3 id="playerName">Игрок</h3>
-          <span id="myRarityLabel">Базовый профиль</span>
+          <span id="myRarityLabel">Базовый</span>
         </div>
       </div>
       <div class="stats-pill">
         <div class="coins"><span id="scoreVal">200</span> 💰</div>
         <div class="spins">Спины: <span id="spinsVal">5</span> ⚡</div>
+        <div id="headerTimerSub" class="timer-sub" style="display:none;"></div>
       </div>
     </div>
 
-    <!-- Шкала до Топ-1 -->
+    <!-- Шкала Топа -->
     <div class="top-bar-card">
       <div class="top-bar-header">
-        <span>Твоё место: <strong id="myRankText">#4</strong></span>
-        <span>До Топ-1: <strong id="toTopText">1300 💰</strong></span>
+        <span>Твоё место: <strong id="myRankText">#1</strong></span>
+        <span>До Топ-1: <strong id="toTopText">0 💰</strong></span>
       </div>
       <div class="progress-track">
         <div id="topProgressFill" class="progress-fill"></div>
@@ -560,19 +565,21 @@
         </div>
       </div>
 
-      <!-- Таблица лидеров -->
+      <!-- Таблица лидеров (только реальные игроки) -->
       <div class="section-card">
         <div class="section-title">
           <span>🏆 Топ игроков</span>
-          <span style="font-size:11px; color:var(--muted);">Рейтинг по монетам</span>
+          <span style="font-size:11px; color:var(--muted);">Только реальные игроки</span>
         </div>
         <div id="topList" class="top-list"></div>
+        <div class="hint-note">
+          Чтобы игроки с разных устройств видели друг друга в общем топе автоматически, нужно подключить общую базу/сервер для бота.
+        </div>
       </div>
     </div>
 
     <!-- ОТДЕЛЬНАЯ ВКЛАДКА ПРОФИЛЯ -->
     <div id="section-profile" class="page-section">
-      <!-- Изменение имени -->
       <div class="section-card">
         <div class="section-title">
           <span>✏️ Имя в игре</span>
@@ -586,7 +593,6 @@
         <div id="nameStatus" class="result-msg" style="text-align:left; font-size:12px;"></div>
       </div>
 
-      <!-- Покупка аватарок и обводок за Звёзды -->
       <div class="section-card">
         <div class="section-title">
           <span>⭐ Аватарки и обводки за Звёзды</span>
@@ -601,19 +607,26 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "plinktunacase_save_v1";
+    const STORAGE_KEY = "plinktunacase_save_v2";
+    const DAILY_SPINS_LIMIT = 5;
+    const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 часа
 
     const tg = window.Telegram && window.Telegram.WebApp;
     let tgDefaultName = "Игрок";
+    let tgUserId = "local_player";
     if (tg) {
       tg.ready();
       tg.expand();
-      if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.first_name) {
-        tgDefaultName = tg.initDataUnsafe.user.first_name;
+      if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        if (tg.initDataUnsafe.user.first_name) {
+          tgDefaultName = tg.initDataUnsafe.user.first_name;
+        }
+        if (tg.initDataUnsafe.user.id) {
+          tgUserId = String(tg.initDataUnsafe.user.id);
+        }
       }
     }
 
-    // Каталог аватарок: простые редкие -> яркие легендарные
     const AVATARS = [
       { id: "common", name: "Новичок", icon: "🐟", rarityClass: "rarity-common", stars: 0, desc: "Простой базовый контур", label: "Базовый" },
       { id: "rare", name: "Редкая", icon: "🐬", rarityClass: "rarity-rare", stars: 10, desc: "Простая синяя рамка", label: "Редкая • 10★" },
@@ -623,18 +636,12 @@
       { id: "legendary", name: "Легендарная", icon: "👑", rarityClass: "rarity-legendary", stars: 50, desc: "Золотая переливающаяся корона-рамка", label: "Легендарная • 50★" }
     ];
 
-    const RIVALS = [
-      { name: "CryptoShark", score: 1500, icon: "👑", rarityClass: "rarity-legendary" },
-      { name: "LuckyMax", score: 950, icon: "🐉", rarityClass: "rarity-mythic" },
-      { name: "Neptune", score: 500, icon: "🐙", rarityClass: "rarity-epic" },
-      { name: "AquaKid", score: 120, icon: "🐬", rarityClass: "rarity-rare" }
-    ];
-
-    // Загрузка сохранения
     function loadState() {
       const fallback = {
+        userId: tgUserId,
         score: 200,
-        spins: 5,
+        spins: DAILY_SPINS_LIMIT,
+        nextSpinResetAt: null,
         customName: tgDefaultName,
         equippedId: "common",
         unlocked: ["common"]
@@ -644,8 +651,10 @@
         if (!raw) return fallback;
         const parsed = JSON.parse(raw);
         return {
+          userId: typeof parsed.userId === "string" && parsed.userId ? parsed.userId : tgUserId,
           score: typeof parsed.score === "number" ? parsed.score : 200,
-          spins: typeof parsed.spins === "number" ? parsed.spins : 5,
+          spins: typeof parsed.spins === "number" ? parsed.spins : DAILY_SPINS_LIMIT,
+          nextSpinResetAt: typeof parsed.nextSpinResetAt === "number" ? parsed.nextSpinResetAt : null,
           customName: typeof parsed.customName === "string" && parsed.customName.trim() ? parsed.customName : tgDefaultName,
           equippedId: AVATARS.some(a => a.id === parsed.equippedId) ? parsed.equippedId : "common",
           unlocked: Array.isArray(parsed.unlocked) && parsed.unlocked.length ? [...new Set(["common", ...parsed.unlocked])] : ["common"]
@@ -663,7 +672,60 @@
       } catch (e) {}
     }
 
+    function formatDuration(ms) {
+      const totalSec = Math.max(0, Math.floor(ms / 1000));
+      const hours = Math.floor(totalSec / 3600);
+      const mins = Math.floor((totalSec % 3600) / 60);
+      const secs = totalSec % 60;
+      const pad = n => String(n).padStart(2, "0");
+      return `${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+    }
+
+    // Проверка и восстановление спинов раз в 24 часа
+    function checkSpinCooldown() {
+      const now = Date.now();
+      if (state.nextSpinResetAt && now >= state.nextSpinResetAt) {
+        state.nextSpinResetAt = null;
+        if (state.spins < DAILY_SPINS_LIMIT) {
+          state.spins = DAILY_SPINS_LIMIT;
+        }
+        saveState();
+      }
+    }
+
+    // Точка подключения общего сервера/БД для отображения реальных игроков со всех устройств
+    async function syncSharedLeaderboard(playerEntry) {
+      // Пример места для подключения общего API/Firebase:
+      // await fetch("https://your-backend.example.com/api/leaderboard", { method: "POST", body: JSON.stringify(playerEntry) });
+      return [playerEntry];
+    }
+
+    function updateSpinTimerUI() {
+      checkSpinCooldown();
+      const now = Date.now();
+      const hasCooldown = Boolean(state.nextSpinResetAt && state.nextSpinResetAt > now);
+      const timerSubEl = document.getElementById("headerTimerSub");
+      const wheelResEl = document.getElementById("wheelResult");
+      const spinBtn = document.getElementById("spinBtn");
+
+      if (hasCooldown) {
+        const leftText = formatDuration(state.nextSpinResetAt - now);
+        timerSubEl.style.display = "block";
+        timerSubEl.textContent = `Новые спины через ${leftText}`;
+        if (state.spins <= 0 && !isSpinning) {
+          wheelResEl.textContent = `Попытки на спине закончились. Новые через ${leftText}`;
+          spinBtn.textContent = `НЕТ ПОПЫТОК (${leftText})`;
+        } else {
+          spinBtn.textContent = `КРУТИТЬ КОЛЕСО (1 ⚡)`;
+        }
+      } else {
+        timerSubEl.style.display = "none";
+        spinBtn.textContent = `КРУТИТЬ КОЛЕСО (1 ⚡)`;
+      }
+    }
+
     function updateUI() {
+      checkSpinCooldown();
       saveState();
       document.getElementById("scoreVal").textContent = state.score;
       document.getElementById("spinsVal").textContent = state.spins;
@@ -680,6 +742,7 @@
       myAvEl.textContent = curAv.icon;
       document.getElementById("myRarityLabel").textContent = curAv.label;
 
+      updateSpinTimerUI();
       renderStarsShop();
       renderLeaderboard();
     }
@@ -717,7 +780,6 @@
     }
 
     function requestStarPurchase(av) {
-      // Готовый вызов для бота (если подключён обработчик оплаты звёздами)
       if (tg && typeof tg.sendData === "function") {
         try {
           tg.sendData(JSON.stringify({
@@ -791,24 +853,27 @@
 
     function renderLeaderboard() {
       const curAv = AVATARS.find(a => a.id === state.equippedId) || AVATARS[0];
-      const allPlayers = [
-        ...RIVALS,
-        { name: `${state.customName} (Ты)`, score: state.score, icon: curAv.icon, rarityClass: curAv.rarityClass, isMe: true }
-      ].sort((a, b) => b.score - a.score);
+      const currentPlayer = {
+        userId: state.userId,
+        name: `${state.customName} (Ты)`,
+        score: state.score,
+        icon: curAv.icon,
+        rarityClass: curAv.rarityClass,
+        isMe: true
+      };
 
-      const myIndex = allPlayers.findIndex(p => p.isMe);
-      const topScore = allPlayers[0].score;
-      const diff = Math.max(0, topScore - state.score);
+      syncSharedLeaderboard(currentPlayer);
 
-      document.getElementById("myRankText").textContent = `#${myIndex + 1}`;
-      document.getElementById("toTopText").textContent = diff === 0 ? "Ты Топ-1! 🏆" : `${diff} 💰`;
+      const players = [currentPlayer].sort((a, b) => b.score - a.score);
+      const topScore = players[0].score;
 
-      const pct = topScore > 0 ? Math.min(100, Math.round((state.score / topScore) * 100)) : 100;
-      document.getElementById("topProgressFill").style.width = `${pct}%`;
+      document.getElementById("myRankText").textContent = `#1`;
+      document.getElementById("toTopText").textContent = `0 💰 (Ты Топ-1!)`;
+      document.getElementById("topProgressFill").style.width = `100%`;
 
       const list = document.getElementById("topList");
       list.innerHTML = "";
-      allPlayers.forEach((p, idx) => {
+      players.forEach((p, idx) => {
         const rankClass = idx === 0 ? "rank-1" : idx === 1 ? "rank-2" : idx === 2 ? "rank-3" : "";
         const row = document.createElement("div");
         row.className = `top-row ${p.isMe ? "me" : ""}`;
@@ -864,12 +929,23 @@
 
     function spinWheel() {
       if (isSpinning) return;
+      checkSpinCooldown();
+
       if (state.spins <= 0) {
-        document.getElementById("wheelResult").textContent = "Спины закончились! Сыграй в Плинко или Монету.";
+        if (!state.nextSpinResetAt || state.nextSpinResetAt <= Date.now()) {
+          state.nextSpinResetAt = Date.now() + COOLDOWN_MS;
+          saveState();
+        }
+        updateSpinTimerUI();
         return;
       }
+
       state.spins--;
+      if (state.spins === 0 && (!state.nextSpinResetAt || state.nextSpinResetAt <= Date.now())) {
+        state.nextSpinResetAt = Date.now() + COOLDOWN_MS;
+      }
       updateUI();
+
       isSpinning = true;
       document.getElementById("spinBtn").disabled = true;
 
@@ -910,7 +986,7 @@
       requestAnimationFrame(animate);
     }
 
-    /* ================= 2. ПЛИНКО (ПЛАВНАЯ ФИЗИКА) ================= */
+    /* ================= 2. ПЛИНКО ================= */
     const pCanvas = document.getElementById("plinkoCanvas");
     const pCtx = pCanvas.getContext("2d");
     const mults = [5, 2, 0.5, 0.2, 0.5, 2, 5];
@@ -998,24 +1074,20 @@
             const nx = dx / dist;
             const ny = dy / dist;
 
-            // Плавно выталкиваем шарик за пределы штырька, чтобы не застревал
             const overlap = minDist - dist;
             ball.x += nx * overlap;
             ball.y += ny * overlap;
 
-            // Отражение скорости вдоль нормали
             const vn = ball.vx * nx + ball.vy * ny;
             if (vn < 0) {
               ball.vx -= (1 + restitution) * vn * nx;
               ball.vy -= (1 + restitution) * vn * ny;
-              // Лёгкий горизонтальный толчок в сторону от центра штырька
               const nudge = nx >= 0 ? 0.65 : -0.65;
               ball.vx += nudge * (0.5 + Math.random() * 0.5);
             }
           }
         }
 
-        // Ограничение скорости и боковые стенки
         ball.vx = Math.max(-3.6, Math.min(3.6, ball.vx));
         ball.vy = Math.min(7.5, ball.vy);
 
@@ -1084,6 +1156,7 @@
     drawWheel();
     drawPlinkoBoard();
     updateUI();
+    setInterval(updateSpinTimerUI, 1000);
   </script>
 </body>
 </html>
